@@ -158,6 +158,9 @@ canada-restaurant-analytics/
 | Google Geocoding API | FSA (postal area) lookup | Per restaurant coordinate |
 | Statistics Canada 2021 Census | Population, median age, median income | FSA level |
 
+> **Note:** The raw Statistics Canada census file exceeds GitHub's file size limit and is not included in this repository.
+> It can be downloaded directly from [Statistics Canada](https://www12.statcan.gc.ca/census-recensement/2021/dp-pd/prof/details/download-telecharger.cfm?Lang=E).
+
 ---
 
 ## License
