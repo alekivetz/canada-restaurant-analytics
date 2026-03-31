@@ -16,6 +16,7 @@ IF OBJECT_ID('silver.google_restaurants', 'U') IS NOT NULL
     DROP TABLE silver.google_restaurants;
 GO
 
+-- Restaurant locations and metadata from Google Places API
 CREATE TABLE silver.google_restaurants (
     restaurant_id         NVARCHAR(50) PRIMARY KEY,
     name                  NVARCHAR(255),
@@ -33,6 +34,7 @@ IF OBJECT_ID('silver.google_reviews', 'U') IS NOT NULL
     DROP TABLE silver.google_reviews;
 GO
 
+-- Customer reviews pulled from Google Places Details API
 CREATE TABLE silver.google_reviews (
     review_id             INT IDENTITY(1, 1) PRIMARY KEY,
     restaurant_id         NVARCHAR(255),
@@ -48,6 +50,7 @@ IF OBJECT_ID('silver.google_categories', 'U') IS NOT NULL
     DROP TABLE google_categories;
 GO
 
+-- Restaurant category tags
 CREATE TABLE silver.google_categories (
     restaurant_id   NVARCHAR(255),
     category        NVARCHAR(100)
@@ -57,6 +60,7 @@ IF OBJECT_ID('silver.census_2021', 'U') IS NOT NULL
     DROP TABLE silver.census_2021;
 GO
 
+-- Statistics Canada 2021 census data at the FSA level
 CREATE TABLE silver.census_2021 (
     geo_code              NVARCHAR(50),
     variable              NVARCHAR(50),

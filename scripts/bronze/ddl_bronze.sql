@@ -16,6 +16,7 @@ IF OBJECT_ID('bronze.google_restaurants', 'U') IS NOT NULL
     DROP TABLE bronze.google_restaurants;
 GO
 
+-- Restaurant locations and metadata from Google Places API
 CREATE TABLE bronze.google_restaurants (
     restaurant_id         NVARCHAR(50),
     name                  NVARCHAR(255),
@@ -33,6 +34,7 @@ IF OBJECT_ID('bronze.google_reviews', 'U') IS NOT NULL
     DROP TABLE bronze.google_reviews;
 GO
 
+-- Customer reviews pulled from Google Places Details API
 CREATE TABLE bronze.google_reviews (
     restaurant_id         NVARCHAR(255),
     author_name           NVARCHAR(255),
@@ -47,6 +49,7 @@ IF OBJECT_ID('bronze.google_categories', 'U') IS NOT NULL
     DROP TABLE bronze.google_categories;
 GO
 
+-- Restaurant category tags
 CREATE TABLE bronze.google_categories (
     restaurant_id   NVARCHAR(255),
     category        NVARCHAR(100)
@@ -56,6 +59,7 @@ IF OBJECT_ID('bronze.census_2021', 'U') IS NOT NULL
     DROP TABLE bronze.census_2021;
 GO
 
+-- Statistics Canada 2021 census data at the FSA level
 CREATE TABLE bronze.census_2021 (
     fsa                   NVARCHAR(3),       
     variable              NVARCHAR(50),
