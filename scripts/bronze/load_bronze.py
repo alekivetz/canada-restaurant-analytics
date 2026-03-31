@@ -1,3 +1,22 @@
+# =============================================================
+# Load Bronze Layer
+# =============================================================
+# Script Purpose:
+#     This script loads raw data into the bronze layer of the
+#     DataWarehouse. It ingests restaurant, review, category,
+#     and census data from local JSON and CSV files into their
+#     respective bronze tables in SQL Server.
+#
+#     The script also enriches restaurant records with FSA
+#     (Forward Sortation Area) codes via the Google Geocoding
+#     API, using a local cache to minimize API calls.
+#
+# WARNING:
+#     Running this script will truncate all bronze tables before
+#     loading. All existing data in the bronze layer will be
+#     permanently deleted.
+# =============================================================
+
 import json
 import os
 import pyodbc
