@@ -13,4 +13,5 @@ __pycache__/
 *.pyo
 
 # Data
-data/raw/census/statcan_census_2021_raw.csv
+data/raw/census/*
+data/prepared/*
