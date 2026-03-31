@@ -32,16 +32,16 @@ BEGIN
         
         PRINT ''
 		PRINT '-------------------------------------------';
-		PRINT 'Loading Places Table';
+		PRINT 'Loading Restaurant Table';
 		PRINT '-------------------------------------------';
 
 		SET @start_time = GETDATE();
-		PRINT '>> Truncating Table: silver.places';
-		TRUNCATE TABLE silver.places;
+		PRINT '>> Truncating Table: silver.restaurants';
+		TRUNCATE TABLE silver.restaurants;
 
-		PRINT '>> Inserting Data Into: places';
-		INSERT INTO silver.places (
-            place_id,
+		PRINT '>> Inserting Data Into: restaurants';
+		INSERT INTO silver.restaurants (
+            restaurant_id,
             name,
             rating,
             user_ratings_total,
@@ -52,24 +52,24 @@ BEGIN
         )
 
         SELECT 
-            place_id,
+            restaurant_id,
             NULLIF(TRIM(name), '') AS name,
             rating,
             user_ratings_total,
             price_level,
             lat,
             lon,
-            UPPER(LEFT(city,1)) + LOWER(SUBSTRING(city,2,LEN(city))) AS city
+            city
         FROM (
             SELECT 
                 *,
                 ROW_NUMBER() OVER (
-                    PARTITION BY place_id
+                    PARTITION BY restaurant_id
                     ORDER BY user_ratings_total DESC
                 ) AS rn
-            FROM bronze.places
+            FROM bronze.restaurants
             ) t
-            WHERE rn = 1; -- Select place with most user ratings for duplicate ids
+            WHERE rn = 1; -- Select restaurant with most user ratings for duplicate ids
         
         SET @end_time = GETDATE();
 	    PRINT '>> Load Duration: ' + CAST (DATEDIFF(second, @start_time, @end_time) AS NVARCHAR) + ' seconds';
@@ -85,7 +85,7 @@ BEGIN
 
 		PRINT '>> Inserting Data Into: reviews';
 		INSERT INTO silver.reviews (
-            place_id,
+            restaurant_id,
             author_name,
             rating,
             text,
@@ -93,7 +93,7 @@ BEGIN
         )
 
         SELECT
-            place_id,
+            restaurant_id,
             NULLIF(TRIM(author_name), '') AS author_name,
             rating,
             text,
@@ -121,5 +121,3 @@ BEGIN
 		PRINT '===========================================';
 	END CATCH
 END
-
-EXEC silver.load_silver;
