@@ -48,6 +48,50 @@ Skills demonstrated:
 
 ---
 
+## Repository Structure
+
+```
+canada-restaurant-analytics/
+│
+├── config/                             # Configuration and environment setup
+│
+├── data/
+│   ├── prepared/                       # Cleaned source files ready for loading
+│   └── raw/                            # Raw API and census outputs
+│
+├── docs/                               # Architecture diagrams and documentation
+│
+├── scripts/
+│   ├── extract/                        # API extraction and data preparation
+│   ├── bronze/                         # Raw data loading into Bronze layer
+│   ├── silver/                         # Cleaning and transformation
+│   ├── gold/                           # Business-ready data modeled into a star schema
+│   └── init_warehouse.sql              # Warehouse initialization script
+│
+├── tests/                              # Data quality checks
+│
+├── init_warehouse.sql                  # Warehouse initialization script
+├── .env                                # Environment variables (not committed)
+├── .gitignore
+├── requirements.txt
+└── README.md
+```
+
+---
+
+## Data Sources
+
+| Source | Data | Coverage |
+|--------|------|----------|
+| Google Places API | Restaurants, ratings, price level, reviews | Multiple Canadian cities |
+| Google Geocoding API | FSA (postal area) lookup | Per restaurant coordinate |
+| Statistics Canada 2021 Census | Population, median age, median income | FSA level |
+
+> **Note:** The raw Statistics Canada census file exceeds GitHub's file size limit and is not included in this repository.
+> It can be downloaded directly from [Statistics Canada](https://www12.statcan.gc.ca/census-recensement/2021/dp-pd/prof/details/download-telecharger.cfm?Lang=E).
+
+---
+
 ## Getting Started
 
 ### Prerequisites
@@ -116,50 +160,6 @@ python -m scripts.bronze.load_bronze
 -- Run in SQL Server: scripts/gold/ddl_gold.sql
 -- Run in SQL Server: tests/quality_checks_gold.sql
 ```
-
----
-
-## Repository Structure
-
-```
-canada-restaurant-analytics/
-│
-├── config/                             # Configuration and environment setup
-│
-├── data/
-│   ├── prepared/                       # Cleaned source files ready for loading
-│   └── raw/                            # Raw API and census outputs
-│
-├── docs/                               # Architecture diagrams and documentation
-│
-├── scripts/
-│   ├── extract/                        # API extraction and data preparation
-│   ├── bronze/                         # Raw data loading into Bronze layer
-│   ├── silver/                         # Cleaning and transformation
-│   ├── gold/                           # Business-ready data modeled into a star schema
-│   └── init_warehouse.sql              # Warehouse initialization script
-│
-├── tests/                              # Data quality checks
-│
-├── init_warehouse.sql                  # Warehouse initialization script
-├── .env                                # Environment variables (not committed)
-├── .gitignore
-├── requirements.txt
-└── README.md
-```
-
----
-
-## Data Sources
-
-| Source | Data | Coverage |
-|--------|------|----------|
-| Google Places API | Restaurants, ratings, price level, reviews | Multiple Canadian cities |
-| Google Geocoding API | FSA (postal area) lookup | Per restaurant coordinate |
-| Statistics Canada 2021 Census | Population, median age, median income | FSA level |
-
-> **Note:** The raw Statistics Canada census file exceeds GitHub's file size limit and is not included in this repository.
-> It can be downloaded directly from [Statistics Canada](https://www12.statcan.gc.ca/census-recensement/2021/dp-pd/prof/details/download-telecharger.cfm?Lang=E).
 
 ---
 
