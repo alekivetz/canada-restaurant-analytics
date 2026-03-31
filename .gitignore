@@ -11,3 +11,6 @@ venv/
 __pycache__/
 *.pyc
 *.pyo
+
+# Data
+data/raw/census/statcan_census_2021_raw.csv
