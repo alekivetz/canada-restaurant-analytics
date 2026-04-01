@@ -1,6 +1,6 @@
 # Canada Restaurant Analytics
 
-A data warehouse and analytics project built around Canadian restaurant data from the Google Places API, Yelp Fusion API, and Statistics Canada census data. Designed as a portfolio project demonstrating end-to-end data engineering - from API extraction to a structured warehouse.
+A data warehouse and analytics project built around Canadian restaurant data from the Google Places API, Yelp Fusion API, and Statistics Canada census data. Designed as a portfolio project demonstrating end-to-end data engineering and analytics, from API extraction to a structured warehouse and interactive Power BI dashboard.
  
 ---
 
@@ -13,6 +13,7 @@ This project involves:
 3. **Data Warehousing**: Loading raw data into a SQL Server warehouse using a Python-based ETL pipeline.
 4. **Data Modeling**: Building fact and dimension tables in a star schema optimized for analytical queries.
 5. **Analytics & Reporting**: SQL-based analysis connecting restaurant performance to neighbourhood demographics.
+6. **Data Visualization**: Interactive Power BI dashboard connecting to the Gold layer, visualizing restaurant performance, category distribution, and demographic insights by city and FSA.
 
 Skills demonstrated:
 - Python ETL pipeline development
@@ -23,6 +24,8 @@ Skills demonstrated:
 - Data modeling (star schema)
 - Census data integration
 - Docker-based SQL Server setup
+- Data visualization and dashboard development
+- Power BI integrationa and report design
 
 ---
 
@@ -47,6 +50,7 @@ The project follows the Medallion Architecture with Bronze, Silver, and Gold lay
 - **Docker** - Local SQL Server instance
 - **pyodbc** - Python to SQL Server connectivity
 - **pandas** - Census CSV processing
+- **Power BI** - Data visualization and dashboard development
  
 ---
 
