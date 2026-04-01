@@ -1,3 +1,23 @@
+# =============================================================================
+# Extract: Pull Google Reviews
+# =============================================================================
+# Script Purpose:
+#     This script reads the extracted restaurant data and fetches up to 5 
+#     reviews per restaurant from the Google Places Details API. Each review 
+#     is enriched with the restaurant ID before being saved to a single
+#     JSON file in the raw data folder.
+#
+#     This script is intended to run after pull_google_restaurants.py,
+#     as it depends on the output of that script.
+#
+# Output:
+#     data/raw/google/google_reviews.json
+#
+# Notes:
+#     - Google Places API returns a maximum of 5 reviews per place
+#     - Sleep between requests is configurable via CONFIG
+# =============================================================================
+
 import os
 import json
 import time
@@ -43,9 +63,6 @@ def main():
 
         for review in reviews:
             review["restaurant_id"] = r_id
-            review["city"] = r.get("city")
-            review["timestamp"] = datetime.now().isoformat()
-
             all_reviews.append(review)
 
         print(f"{i+1} / {len(restaurants)} restaurants processed")
