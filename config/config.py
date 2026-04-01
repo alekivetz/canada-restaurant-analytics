@@ -7,8 +7,9 @@ CONFIG = {
     "google_api": {
         "key": os.getenv("GOOGLE_API_KEY"),
         "nearby_endpoint": "https://maps.googleapis.com/maps/api/place/nearbysearch/json",
-        "details_endpoint": "https://maps.googleapis.com/maps/api/place/details/json"
-    },
+        "details_endpoint": "https://maps.googleapis.com/maps/api/place/details/json",
+        "geocoding_endpoint": "https://maps.googleapis.com/maps/api/geocode/json?latlng={lat},{lon}&key={api_key}"
+    },  
 
     "yelp_api": {
          "headers": {
@@ -98,6 +99,6 @@ CONFIG = {
         "yelp_restaurants_file": "yelp_restaurants.json",
 
         "census_raw_file": "statcan_census_2021_raw.csv",
-        "census_prepared_file": "statcan_census_2021_prepared.csv"
+        "census_file": "statcan_census_2021_prepared.csv"
     }
 }

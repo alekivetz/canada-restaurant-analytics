@@ -7,8 +7,8 @@
 #     city's coordinate grid, fetches all nearby restaurants within a 3km 
 #     radius, and handles API pagination via next_page_token.
 #
-#     Each restaurant record is enriched with its city before being saved to 
-#     a single JSON file in the raw data folder.
+#     Each restaurant record is enriched with its city and FSA code
+#     before being saved to a single JSON file in the raw data folder.
 #
 # Output:
 #     data/raw/google/google_restaurants.json
@@ -25,6 +25,7 @@ import requests
 from datetime import datetime
 
 from config.config import CONFIG
+import utils.fsa_helper as fsa_helper
 
 def fetch_restaurants(lat, lon):
     url = CONFIG["google_api"]["nearby_endpoint"]
@@ -74,7 +75,9 @@ def main():
             restaurants = fetch_restaurants(lat, lon)
 
             for r in restaurants:
-                r["city"] = city             
+                r["city"] = city
+                location = r.get("geometry", {}).get("location", {})
+                r["fsa"] = fsa_helper.get_fsa_cached(location.get("lat"), location.get("lng"), CONFIG["google_api"]["key"])
                 all_results.append(r)
 
             print(f"{city} | ({lat},{lon}) complete")

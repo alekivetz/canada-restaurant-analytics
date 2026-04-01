@@ -54,7 +54,7 @@ CREATE TABLE bronze.yelp_restaurants (
     name                  NVARCHAR(255),
     rating                DECIMAL(3,2),
     categories            NVARCHAR(MAX),
-    price_level           INT,
+    price_level           NVARCHAR(5),
     city                  NVARCHAR(50),
     lat                   DECIMAL(9,6),
     lon                   DECIMAL(9,6),

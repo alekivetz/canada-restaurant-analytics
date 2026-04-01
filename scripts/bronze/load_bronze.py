@@ -2,14 +2,9 @@
 # Load Bronze Layer
 # =============================================================================
 # Script Purpose:
-#     This script loads raw data into the bronze layer of the DataWarehouse. 
-#     It reads JSON files containing restaurant data from Google Maps API,
-#     and census data from local JSON and CSV files into their respective 
-#     tables in the bronze schema.
-#
-#     The script also enriches restaurant records with FSA 
-#     (Forward Sortation Area) information from the Google Maps API, 
-#     using a local cache to minimize API calls.
+#     This script loads raw data into the bronze layer of the DataWarehouse.
+#     It reads JSON and CSV files produced by the extraction scripts and loads
+#     them into their respective tables in the bronze schema.
 #
 # WARNING:
 #     Running this script will truncate all bronze tables before
@@ -20,38 +15,11 @@
 import json
 import os
 import pyodbc
-import requests
 import pandas as pd
 from datetime import datetime
 
 from config.config import CONFIG
 
-fsa_cache = {}
-
-def get_fsa_cached(lat, lon, api_key):
-    key = (round(lat, 4), round(lon, 4))  # group nearby locations
-    
-    if key in fsa_cache:
-        return fsa_cache[key]
-
-    fsa = get_fsa(lat, lon, api_key)
-    fsa_cache[key] = fsa
-    return fsa
-
-
-def get_fsa(lat, lon, api_key):
-    url = f"https://maps.googleapis.com/maps/api/geocode/json?latlng={lat},{lon}&key={api_key}"
-
-    response = requests.get(url)
-    data = response.json()
-
-    for result in data.get("results", []):
-        for comp in result.get("address_components", []):
-            if "postal_code" in comp.get("types", []):
-                postal_code = comp.get("long_name")
-                return postal_code[:3].upper()   # FSA
-    
-    return None
 
 
 # Connect to SQL Server
@@ -90,7 +58,10 @@ def load_google_restaurants(cursor, filepath):
     with open(filepath, "r") as f:
         data = json.load(f)
  
-    for row in data:
+    for i, row in enumerate(data):
+        if (i + 1) % 100 == 0:
+            print(f"{i + 1} / {len(data)} restaurants processed")
+
         location = row.get("geometry", {}).get("location", {})
         cursor.execute("""
             INSERT INTO bronze.google_restaurants (
@@ -113,8 +84,8 @@ def load_google_restaurants(cursor, filepath):
         row.get("price_level"),
         row.get("city"),
         location.get("lat"),
-        location.get("lon"),
-        get_fsa_cached(location.get("lat"), location.get("lon"), CONFIG["google_api"]["key"])
+        location.get("lng"),
+        row.get("fsa")
         )
     print(f">> Inserted {len(data)} restaurants into bronze.google_restaurants")
 
@@ -163,9 +134,11 @@ def load_yelp_restaurants(cursor, filepath):
     with open(filepath, "r") as f:
         data = json.load(f)
 
-    for row in data:
-        location = row.get("coordinates", {})
-        categories_raw = row.get("categories", [])
+    for i, row in enumerate(data):
+        if (i + 1) % 100 == 0:
+            print(f"{i + 1} / {len(data)} restaurants processed")
+
+        coordinates = row.get("coordinates", {})
         cursor.execute("""
             INSERT INTO bronze.yelp_restaurants (
                 restaurant_id,
@@ -183,12 +156,12 @@ def load_yelp_restaurants(cursor, filepath):
         row.get("id"),
         row.get("name"),
         row.get("rating"),
-        row.get("categories"),
+        row.get("categories_formatted"),
         row.get("price"),
-        ", ".join([c.get("title", "") for c in categories_raw]),
-        location.get("latitude"),
-        location.get("longitude"),
-        get_fsa_cached(location.get("latitude"), location.get("longitude"), CONFIG["google_api"]["key"])
+        row.get("location", {}).get("city"),
+        coordinates.get("latitude"),
+        coordinates.get("longitude"),
+        row.get("fsa")
         )
     print(f">> Inserted {len(data)} restaurants into bronze.yelp_restaurants")
 
@@ -259,6 +232,7 @@ def main():
         census_path = os.path.join(
             CONFIG["pipeline"]["base_path"],
             CONFIG["pipeline"]["prepared_folder"],
+            CONFIG["pipeline"]["census_folder"],
             CONFIG["pipeline"]["census_file"]
         )
 

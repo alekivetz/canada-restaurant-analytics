@@ -7,14 +7,14 @@
 #     city's coordinate grid and fetches up to 50 records per request within 
 #     a 4km radius.
 #
-#     Results are saved to a single JSON file in the raw data folder for 
-#     downstream processing.
+#     Each restaurant record is enriched with its FSA and formatted 
+#     categories before being saved to a single JSON file.
 #
 # Output:
 #     data/raw/yelp/yelp_restaurants.json
 #
 # Notes:
-#     - Pagination is offset-based (max 50 results per request)
+#     - Returns up to 50 results per coodinate point
 #     - Failed requests are caught and logged without stopping the pipeline
 #     - Sleep between requests is configurable via CONFIG
 # =============================================================================
@@ -23,9 +23,9 @@ import os
 import json
 import time
 import requests
-from datetime import datetime
 
 from config.config import CONFIG
+import utils.fsa_helper as fsa_helper
 
 def fetch_city_data(city):
     url = CONFIG["yelp_api"]["restaurant_endpoint"]
@@ -51,6 +51,9 @@ def fetch_city_data(city):
             data = response.json()
 
             for record in data.get("businesses", []):
+                raw_categories = record.get("categories", [])
+                record["categories_formatted"] = ", ".join([c.get("title", "") for c in raw_categories])
+                record["fsa"] = fsa_helper.get_fsa_cached(record.get("coordinates", {}).get("latitude"), record.get("coordinates", {}).get("longitude"), CONFIG["google_api"]["key"])
                 all_results.append(record)
 
             print(f"{city} | ({lat}, {lon}) complete")
@@ -72,7 +75,7 @@ def main():
         print(f"\n--- Getting restaurants: {city} ---")
 
         data = fetch_city_data(city)
-        if data: 
+        if data:
             all_results.extend(data)
         else:
             print(f"No restaurants collected for {city}")
