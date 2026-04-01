@@ -14,7 +14,7 @@
 #     data/raw/yelp/yelp_restaurants.json
 #
 # Notes:
-#     - Returns up to 50 results per coodinate point
+#     - Returns up to 50 results per coordinate point
 #     - Failed requests are caught and logged without stopping the pipeline
 #     - Sleep between requests is configurable via CONFIG
 # =============================================================================
@@ -23,14 +23,14 @@ import os
 import json
 import time
 import requests
-
 from config.config import CONFIG
 import utils.fsa_helper as fsa_helper
 
-def fetch_city_data(city):
-    url = CONFIG["yelp_api"]["restaurant_endpoint"]
-    headers=CONFIG["yelp_api"]["headers"]
 
+def fetch_city_data(city):
+    """Fetch all restaurants for a city across its coordinate grid."""
+    url = CONFIG["yelp_api"]["restaurant_endpoint"]
+    headers = CONFIG["yelp_api"]["headers"]
     base_params = {
         "categories": "restaurant",
         "limit": 50,
@@ -45,24 +45,34 @@ def fetch_city_data(city):
             "latitude": lat,
             "longitude": lon,
         })
-        
-        try: 
+
+        try:
             response = requests.get(url, params=params, headers=headers)
             data = response.json()
 
             for record in data.get("businesses", []):
+                # Format categories from list of dicts to comma-separated string
                 raw_categories = record.get("categories", [])
                 record["categories_formatted"] = ", ".join([c.get("title", "") for c in raw_categories])
-                record["fsa"] = fsa_helper.get_fsa_cached(record.get("coordinates", {}).get("latitude"), record.get("coordinates", {}).get("longitude"), CONFIG["google_api"]["key"])
+
+                # Enrich with FSA via Google Geocoding API
+                coords = record.get("coordinates", {})
+                record["fsa"] = fsa_helper.get_fsa_cached(
+                    coords.get("latitude"),
+                    coords.get("longitude"),
+                    CONFIG["google_api"]["key"]
+                )
+
                 all_results.append(record)
 
             print(f"{city} | ({lat}, {lon}) complete")
             time.sleep(CONFIG["pipeline"]["sleep_seconds"])
 
         except Exception as e:
-            print(f"{city} | ({lat}, {lon}) failed : {e}")
+            print(f"{city} | ({lat}, {lon}) failed: {e}")
 
     return all_results
+
 
 def main():
     print("\n====================================================")
@@ -73,24 +83,26 @@ def main():
 
     for city in CONFIG["cities"]:
         print(f"\n--- Getting restaurants: {city} ---")
-
         data = fetch_city_data(city)
+
         if data:
             all_results.extend(data)
         else:
             print(f"No restaurants collected for {city}")
 
+    # Save all results to a single JSON file
     filepath = os.path.join(
         CONFIG["pipeline"]["base_path"],
         CONFIG["pipeline"]["raw_folder"],
         CONFIG["pipeline"]["yelp_folder"],
         CONFIG["pipeline"]["yelp_restaurants_file"]
     )
+
     os.makedirs(os.path.dirname(filepath), exist_ok=True)
 
     with open(filepath, "w") as f:
         json.dump(all_results, f, indent=4)
-        
+
     print("\n====================================================")
     print("Extraction Complete")
     print(f"Saved {len(all_results)} restaurants to {filepath}")

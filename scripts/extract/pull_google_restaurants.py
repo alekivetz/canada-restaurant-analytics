@@ -22,14 +22,13 @@ import os
 import json
 import time
 import requests
-from datetime import datetime
-
 from config.config import CONFIG
 import utils.fsa_helper as fsa_helper
 
-def fetch_restaurants(lat, lon):
-    url = CONFIG["google_api"]["nearby_endpoint"]
 
+def fetch_restaurants(lat, lon):
+    """Fetch all restaurants near a coordinate point, handling API pagination."""
+    url = CONFIG["google_api"]["nearby_endpoint"]
     params = {
         "location": f"{lat},{lon}",
         "radius": 3000,
@@ -46,16 +45,14 @@ def fetch_restaurants(lat, lon):
             break
 
         data = response.json()
-        results = data.get("results", [])
+        all_results.extend(data.get("results", []))
 
-        all_results.extend(results)
-
+        # Google returns up to 3 pages of 20 results via next_page_token
         next_page = data.get("next_page_token")
-
         if not next_page:
             break
 
-        time.sleep(2)  
+        time.sleep(2)  # Required delay before requesting next page
         params["pagetoken"] = next_page
 
     return all_results
@@ -75,22 +72,29 @@ def main():
             restaurants = fetch_restaurants(lat, lon)
 
             for r in restaurants:
+                # Enrich each record with city and FSA
                 r["city"] = city
                 location = r.get("geometry", {}).get("location", {})
-                r["fsa"] = fsa_helper.get_fsa_cached(location.get("lat"), location.get("lng"), CONFIG["google_api"]["key"])
+                r["fsa"] = fsa_helper.get_fsa_cached(
+                    location.get("lat"),
+                    location.get("lng"),
+                    CONFIG["google_api"]["key"]
+                )
                 all_results.append(r)
 
             print(f"{city} | ({lat},{lon}) complete")
             time.sleep(CONFIG["pipeline"]["sleep_seconds"])
 
+    # Save all results to a single JSON file
     filepath = os.path.join(
         CONFIG["pipeline"]["base_path"],
         CONFIG["pipeline"]["raw_folder"],
         CONFIG["pipeline"]["google_folder"],
         CONFIG["pipeline"]["google_restaurants_file"]
     )
+
     os.makedirs(os.path.dirname(filepath), exist_ok=True)
-    
+
     with open(filepath, "w") as f:
         json.dump(all_results, f, indent=4)
 

@@ -22,14 +22,12 @@ import os
 import json
 import time
 import requests
-from datetime import datetime
-
 from config.config import CONFIG
 
 
 def fetch_reviews(restaurant_id):
+    """Fetch up to 5 reviews for a given place_id from the Google Places Details API."""
     url = CONFIG["google_api"]["details_endpoint"]
-
     params = {
         "place_id": restaurant_id,
         "fields": "name,reviews,rating",
@@ -40,6 +38,7 @@ def fetch_reviews(restaurant_id):
 
     if response.status_code != 200:
         return []
+
     data = response.json()
     return data.get("result", {}).get("reviews", [])
 
@@ -49,6 +48,7 @@ def main():
     print("Extracting Review Data from Google Places API")
     print("====================================================")
 
+    # Load restaurants extracted in previous step
     restaurant_filepath = os.path.join(
         CONFIG["pipeline"]["base_path"],
         CONFIG["pipeline"]["raw_folder"],
@@ -64,25 +64,28 @@ def main():
     for i, r in enumerate(restaurants):
         if (i + 1) % 50 == 0:
             print(f"{i + 1} / {len(restaurants)} restaurants processed")
-        r_id = r.get("place_id")
 
+        r_id = r.get("place_id")
         if not r_id:
             continue
 
         reviews = fetch_reviews(r_id)
 
+        # Tag each review with its restaurant ID
         for review in reviews:
             review["restaurant_id"] = r_id
             all_reviews.append(review)
 
         time.sleep(CONFIG["pipeline"]["sleep_seconds"])
 
+    # Save all reviews to a single JSON file
     filepath = os.path.join(
         CONFIG["pipeline"]["base_path"],
         CONFIG["pipeline"]["raw_folder"],
         CONFIG["pipeline"]["google_folder"],
         CONFIG["pipeline"]["google_reviews_file"]
     )
+
     os.makedirs(os.path.dirname(filepath), exist_ok=True)
 
     with open(filepath, "w") as f:
@@ -93,6 +96,7 @@ def main():
     print(f"Processed {len(restaurants)} restaurants")
     print(f"Saved {len(all_reviews)} reviews to {filepath}")
     print("====================================================")
+
 
 if __name__ == "__main__":
     main()
