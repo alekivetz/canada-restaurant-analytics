@@ -105,9 +105,10 @@ def load_restaurants(cursor, filepath):
         row.get("user_ratings_total"),
         row.get("price_level"),
         row.get("lat"),
-        row.get("lon"),
-        row.get("city"),
-        get_fsa_cached(row.get("lat"), row.get("lon"), CONFIG["api"]["key"])
+        location = row.get("geometry", {}).get("location", {})
+        location.get("lat"),
+        location.get("lon")
+        get_fsa_cached(location.get("lon"), location.get("lon"), CONFIG["api"]["key"])
         )
     print(f">> Inserted {len(data)} restaurants into bronze.google_restaurants")
 
