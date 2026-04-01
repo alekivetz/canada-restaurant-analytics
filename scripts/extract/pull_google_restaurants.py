@@ -1,3 +1,23 @@
+# =============================================================================
+# Extract: Pull Google Restaurants
+# =============================================================================
+# Script Purpose:
+#     This script extracts restaurant data from the Google Places Nearby 
+#     Search API for all cities defined in the config. It iterates over each 
+#     city's coordinate grid, fetches all nearby restaurants within a 3km 
+#     radius, and handles API pagination via next_page_token.
+#
+#     Each restaurant record is enriched with its city before being saved to 
+#     a single JSON file in the raw data folder.
+#
+# Output:
+#     data/raw/google/google_restaurants.json
+#
+# Notes:
+#     - Sleeps 2 seconds between paginated requests (API requirement)
+#     - Sleep between coordinate calls is configurable via CONFIG
+# =============================================================================
+
 import os
 import json
 import time
@@ -41,20 +61,20 @@ def fetch_restaurants(lat, lon):
 
 
 def main():
+    print("\n====================================================")
+    print("Extracting Restaurant Data from Google Places API")
+    print("====================================================")
+
     all_results = []
 
     for city, data in CONFIG["cities"].items():
-        print(f"\n--- Pulling restaurants for {city} ---")
+        print(f"\n--- Getting restaurants: {city} ---")
 
         for lat, lon in data["coords"]:
             restaurants = fetch_restaurants(lat, lon)
 
             for r in restaurants:
-                r["city"] = city
-                r["lat"] = lat
-                r["lon"] = lon
-                r["timestamp"] = datetime.now().isoformat()
-                
+                r["city"] = city             
                 all_results.append(r)
 
             print(f"{city} | ({lat},{lon}) complete")
@@ -67,7 +87,10 @@ def main():
     with open(filepath, "w") as f:
         json.dump(all_results, f, indent=4)
 
-    print(f"\nSaved {len(all_results)} restaurants → {filepath}")
+    print("\n====================================================")
+    print("Extraction Complete.")
+    print(f"Saved {len(all_results)} restaurants to {filepath}")
+    print("====================================================")
 
 
 if __name__ == "__main__":
