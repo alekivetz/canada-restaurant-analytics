@@ -2,17 +2,6 @@
 
 A data warehouse and analytics project built around Canadian restaurant data from the Google Places API, Yelp Fusion API, and Statistics Canada census data. Designed as a portfolio project demonstrating end-to-end data engineering - from API extraction to a structured warehouse.
  
-
----
-
-## Data Architecture
-
-The project follows the Medallion Architecture with Bronze, Silver, and Gold layers:
-
-1. **Bronze Layer**: Raw data ingested from the Google Places API (restaurants, reviews) and Yelp Fusion API (restaurants, categories), along with Statistics Canada census CSV files, loaded into SQL Server as-is.
-2. **Silver Layer**: Data cleaning, standardization, and enrichment. This includes FSA (Forward Sortation Area) lookup via the Google Geocoding API, and entity resolution matching Google and Yelp restaurants.
-3. **Gold Layer**: Business-ready data modeled into a star schema for analytical queries and reporting.
-
 ---
 
 ## Project Overview
@@ -37,48 +26,28 @@ Skills demonstrated:
 
 ---
 
+## Data Architecture
+
+The project follows the Medallion Architecture with Bronze, Silver, and Gold layers:
+
+1. **Bronze Layer**: Raw data ingested from the Google Places API (restaurants, reviews) and Yelp Fusion API (restaurants, categories), along with Statistics Canada census CSV files, loaded into SQL Server as-is.
+2. **Silver Layer**: Data cleaning, standardization, and enrichment. This includes FSA (Forward Sortation Area) lookup via the Google Geocoding API, and entity resolution matching Google and Yelp restaurants.
+3. **Gold Layer**: Business-ready data modeled into a star schema for analytical queries and reporting.
+
+---
+
 ## Tools & Technologies
 
 - **Python** - ETL scripts, API calls, data loading
-- **SQL Server** — Data warehouse (running in Docker)
-- **Google Places API** — Restaurant and review data
+- **SQL Server** - Data warehouse (running in Docker)
+- **Google Places API** - Restaurant and review data
 - **Google Geocoding API** — FSA enrichment
-- **Yelp Fusion API** — Restaurant data and categories
-- **Statistics Canada** — 2021 census data
-- **Docker** — Local SQL Server instance
-- **pyodbc** — Python to SQL Server connectivity
-- **pandas** — Census CSV processing
+- **Yelp Fusion API** - Restaurant data and categories
+- **Statistics Canada** - 2021 census data
+- **Docker** - Local SQL Server instance
+- **pyodbc** - Python to SQL Server connectivity
+- **pandas** - Census CSV processing
  
----
-
-## Repository Structure
-
-```
-canada-restaurant-analytics/
-│
-├── config/                             # Configuration and environment setup
-│
-├── data/
-│   ├── prepared/                       # Cleaned source files ready for loading
-│   └── raw/                            # Raw API and census outputs
-│
-├── docs/                               # Architecture diagrams and documentation
-│
-├── scripts/
-│   ├── extract/                        # API extraction and data preparation
-│   ├── bronze/                         # Raw data loading into Bronze layer
-│   ├── silver/                         # Cleaning and transformation
-│   ├── gold/                           # Business-ready data modeled into a star schema
-│   └── init_warehouse.sql              # Warehouse initialization script
-│
-├── tests/                              # Data quality checks
-│
-├── .env                                # Environment variables (not committed)
-├── .gitignore
-├── requirements.txt
-└── README.md
-```
-
 ---
 
 ## Data Sources
@@ -166,6 +135,37 @@ python -m scripts.bronze.load_bronze
 -- Run in SQL Server: scripts/gold/ddl_gold.sql
 -- Run in SQL Server: tests/quality_checks_gold.sql
 ```
+
+---
+
+## Repository Structure
+
+```
+canada-restaurant-analytics/
+│
+├── config/                             # Configuration and environment setup
+│
+├── data/
+│   ├── prepared/                       # Cleaned source files ready for loading
+│   └── raw/                            # Raw API and census outputs
+│
+├── docs/                               # Architecture diagrams and documentation
+│
+├── scripts/
+│   ├── extract/                        # API extraction and data preparation
+│   ├── bronze/                         # Raw data loading into Bronze layer
+│   ├── silver/                         # Cleaning and transformation
+│   ├── gold/                           # Business-ready data modeled into a star schema
+│   └── init_warehouse.sql              # Warehouse initialization script
+│
+├── tests/                              # Data quality checks
+│
+├── .env                                # Environment variables (not committed)
+├── .gitignore
+├── requirements.txt
+└── README.md
+```
+
 ---
 
 ## License
