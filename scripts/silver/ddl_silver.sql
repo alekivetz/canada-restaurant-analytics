@@ -41,8 +41,7 @@ CREATE TABLE silver.google_reviews (
     author_name           NVARCHAR(255),
     rating                DECIMAL(3,2),
     text                  NVARCHAR(MAX),
-    review_time           DATETIME,
-    city                  NVARCHAR(50)
+    review_time           BIGINT,
 );
 GO
 
@@ -62,7 +61,7 @@ GO
 
 -- Statistics Canada 2021 census data at the FSA level
 CREATE TABLE silver.census_2021 (
-    geo_code              NVARCHAR(50),
+    fsa                   NVARCHAR(3),
     variable              NVARCHAR(50),
     value                 DECIMAL(18,2)
 );

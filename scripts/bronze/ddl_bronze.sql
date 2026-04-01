@@ -40,8 +40,7 @@ CREATE TABLE bronze.google_reviews (
     author_name           NVARCHAR(255),
     rating                DECIMAL(3,2),
     text                  NVARCHAR(MAX),
-    review_time           BIGINT,
-    city                  NVARCHAR(50)
+    review_time           BIGINT
 );
 GO
 

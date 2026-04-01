@@ -48,7 +48,8 @@ BEGIN
             price_level,
             lat,
             lon,
-            city
+            city,
+            fsa
         )
 
         SELECT 
@@ -59,7 +60,8 @@ BEGIN
             price_level,
             lat,
             lon,
-            city
+            city,
+            fsa
         FROM (
             SELECT 
                 *,
