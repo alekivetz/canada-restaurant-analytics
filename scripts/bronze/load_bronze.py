@@ -8,8 +8,8 @@
 #     tables in the bronze schema.
 #
 #     The script also enriches restaurant records with FSA 
-#     (Federal Statistical Area) information from the Google Maps
-#     API, using a local cache to minimize API calls.
+#     (Forward Sortation Area) information from the Google Maps API, 
+#     using a local cache to minimize API calls.
 #
 # WARNING:
 #     Running this script will truncate all bronze tables before
@@ -21,6 +21,7 @@ import json
 import os
 import pyodbc
 import requests
+import pandas as pd
 from datetime import datetime
 
 from config.config import CONFIG
@@ -53,7 +54,7 @@ def get_fsa(lat, lon, api_key):
     return None
 
 
-# DB connection
+# Connect to SQL Server
 def get_connection():
     db = CONFIG["db"]
     return pyodbc.connect(
@@ -67,24 +68,30 @@ def get_connection():
     )
 
 
-# TRUNCATE TABLES 
+# Truncate tables in bronze schema
 def truncate_tables(cursor):
     print(">> Truncating bronze tables")
 
     cursor.execute("TRUNCATE TABLE bronze.google_restaurants")
     cursor.execute("TRUNCATE TABLE bronze.google_reviews")
-    cursor.execute("TRUNCATE TABLE bronze.google_categories")
+    cursor.execute("TRUNCATE TABLE bronze.yelp_restaurants")
+    cursor.execute("TRUNCATE TABLE bronze.census_2021")
 
 
-# LOAD RESTAURANTS
-def load_restaurants(cursor, filepath):
+# Load google restaurants
+def load_google_restaurants(cursor, filepath):
+    if not os.path.exists(filepath):
+        print(">> No Google restaurants file found, skipping")
+        return
+    
     print("\n------------------------------------------")
-    print(">> Loading restaurants")
+    print(">> Loading Google restaurants")
 
     with open(filepath, "r") as f:
         data = json.load(f)
  
     for row in data:
+        location = row.get("geometry", {}).get("location", {})
         cursor.execute("""
             INSERT INTO bronze.google_restaurants (
                 restaurant_id,
@@ -92,9 +99,9 @@ def load_restaurants(cursor, filepath):
                 rating,
                 user_ratings_total,
                 price_level,
+                city,
                 lat,
                 lon,
-                city,
                 fsa
             )
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -104,23 +111,22 @@ def load_restaurants(cursor, filepath):
         row.get("rating"),
         row.get("user_ratings_total"),
         row.get("price_level"),
-        row.get("lat"),
-        location = row.get("geometry", {}).get("location", {})
+        row.get("city"),
         location.get("lat"),
-        location.get("lon")
-        get_fsa_cached(location.get("lon"), location.get("lon"), CONFIG["api"]["key"])
+        location.get("lon"),
+        get_fsa_cached(location.get("lat"), location.get("lon"), CONFIG["google_api"]["key"])
         )
     print(f">> Inserted {len(data)} restaurants into bronze.google_restaurants")
 
 
-# LOAD REVIEWS
-def load_reviews(cursor, filepath):
+# Load google reviews
+def load_google_reviews(cursor, filepath):
     if not os.path.exists(filepath):
-        print(">> No reviews file found, skipping")
+        print(">> No Google reviews file found, skipping")
         return
     
     print("\n------------------------------------------")
-    print(">> Loading reviews")
+    print(">> Loading Google reviews")
 
     with open(filepath, "r") as f:
         data = json.load(f)
@@ -132,44 +138,63 @@ def load_reviews(cursor, filepath):
                 author_name,
                 rating,
                 text,
-                review_time,
-                city
+                review_time
             )
-            VALUES (?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?)
         """,
         row.get("place_id"),
         row.get("author_name"),
         row.get("rating"),
         row.get("text"),
-        row.get("time"),
-        row.get("city")
+        row.get("time")
         )
     print(f">> Inserted {len(data)} reviews into bronze.google_reviews")
 
 
-# LOAD CATEGORIES
-def load_categories(cursor, filepath):
-    
+# Load yelp restaurants
+def load_yelp_restaurants(cursor, filepath):
+    if not os.path.exists(filepath):
+        print(">> No Yelp restaurants file found, skipping")
+        return
+
     print("\n------------------------------------------")
-    print(">> Loading categories")
+    print(">> Loading Yelp restaurants")
+
     with open(filepath, "r") as f:
         data = json.load(f)
-    for row in data:
-        restaurant_id = row.get("place_id")
-        for category in row.get("types", []):
-            cursor.execute("""
-                INSERT INTO bronze.google_categories (
-                    restaurant_id,
-                    category
-                )
-                VALUES (?, ?)
-            """,
-            restaurant_id,
-            category
-            )
-    print(">> Inserted categories into bronze.google_categories")
 
-# LOAD CENSUS
+    for row in data:
+        location = row.get("coordinates", {})
+        categories_raw = row.get("categories", [])
+        cursor.execute("""
+            INSERT INTO bronze.yelp_restaurants (
+                restaurant_id,
+                name,
+                rating,
+                categories,
+                price_level,
+                city,
+                lat,
+                lon,
+                fsa
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        row.get("id"),
+        row.get("name"),
+        row.get("rating"),
+        row.get("categories"),
+        row.get("price"),
+        ", ".join([c.get("title", "") for c in categories_raw]),
+        location.get("latitude"),
+        location.get("longitude"),
+        get_fsa_cached(location.get("latitude"), location.get("longitude"), CONFIG["google_api"]["key"])
+        )
+    print(f">> Inserted {len(data)} restaurants into bronze.yelp_restaurants")
+
+
+
+# Load census data
 def load_census(cursor, filepath):
     
     print("\n------------------------------------------")
@@ -178,8 +203,6 @@ def load_census(cursor, filepath):
     if not os.path.exists(filepath):
         print(">> No census file found, skipping")
         return
-
-    import pandas as pd
 
     df = pd.read_csv(filepath)
 
@@ -215,15 +238,33 @@ def main():
     try:
         truncate_tables(cursor)
 
-        raw_folder = CONFIG["pipeline"]["raw_path"]
+        google_restaurants_file = os.path.join(
+            CONFIG["pipeline"]["base_path"],
+            CONFIG["pipeline"]["raw_folder"],
+            CONFIG["pipeline"]["google_folder"],
+            CONFIG["pipeline"]["google_restaurants_file"]
+        )
+        google_reviews_file = os.path.join(
+            CONFIG["pipeline"]["base_path"],
+            CONFIG["pipeline"]["raw_folder"],
+            CONFIG["pipeline"]["google_folder"],
+            CONFIG["pipeline"]["google_reviews_file"]
+        )
+        yelp_restaurants_file = os.path.join(
+            CONFIG["pipeline"]["base_path"],
+            CONFIG["pipeline"]["raw_folder"],
+            CONFIG["pipeline"]["yelp_folder"],
+            CONFIG["pipeline"]["yelp_restaurants_file"]
+        )
+        census_path = os.path.join(
+            CONFIG["pipeline"]["base_path"],
+            CONFIG["pipeline"]["prepared_folder"],
+            CONFIG["pipeline"]["census_file"]
+        )
 
-        restaurants_path = os.path.join(raw_folder, CONFIG["pipeline"]["google_restaurants_path"])
-        reviews_path = os.path.join(raw_folder, CONFIG["pipeline"]["google_reviews_path"])
-        census_path = CONFIG["pipeline"]["census_path_prepared"]
-
-        load_restaurants(cursor, restaurants_path)
-        load_reviews(cursor, reviews_path)
-        load_categories(cursor, restaurants_path)
+        load_google_restaurants(cursor, google_restaurants_file)
+        load_google_reviews(cursor, google_reviews_file)
+        load_yelp_restaurants(cursor, yelp_restaurants_file)
         load_census(cursor, census_path)
 
         conn.commit()

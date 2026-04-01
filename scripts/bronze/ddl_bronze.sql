@@ -23,9 +23,9 @@ CREATE TABLE bronze.google_restaurants (
     rating                DECIMAL(3,2),
     user_ratings_total    INT,
     price_level           INT,
+    city                  NVARCHAR(50),
     lat                   DECIMAL(9,6),
     lon                   DECIMAL(9,6),
-    city                  NVARCHAR(50),
     fsa                   NVARCHAR(3)   
 );
 GO
@@ -44,15 +44,23 @@ CREATE TABLE bronze.google_reviews (
 );
 GO
 
-IF OBJECT_ID('bronze.google_categories', 'U') IS NOT NULL
-    DROP TABLE bronze.google_categories;
+IF OBJECT_ID('bronze.yelp_restaurants', 'U') IS NOT NULL
+    DROP TABLE bronze.yelp_restaurants;
 GO
 
--- Restaurant category tags
-CREATE TABLE bronze.google_categories (
-    restaurant_id   NVARCHAR(255),
-    category        NVARCHAR(100)
+-- Restaurant locations and metadata from Yelp Fusion API
+CREATE TABLE bronze.yelp_restaurants (
+    restaurant_id         NVARCHAR(50),
+    name                  NVARCHAR(255),
+    rating                DECIMAL(3,2),
+    categories            NVARCHAR(MAX),
+    price_level           INT,
+    city                  NVARCHAR(50),
+    lat                   DECIMAL(9,6),
+    lon                   DECIMAL(9,6),
+    fsa                   NVARCHAR(3)   
 );
+GO
 
 IF OBJECT_ID('bronze.census_2021', 'U') IS NOT NULL
     DROP TABLE bronze.census_2021;

@@ -80,15 +80,19 @@ def main():
             print(f"{city} | ({lat},{lon}) complete")
             time.sleep(CONFIG["pipeline"]["sleep_seconds"])
 
-    os.makedirs(CONFIG["pipeline"]["raw_path"], exist_ok=True)
-
-    filepath = os.path.join(CONFIG["pipeline"]["raw_path"], CONFIG["pipeline"]["google_restaurants_path"])
-
+    filepath = os.path.join(
+        CONFIG["pipeline"]["base_path"],
+        CONFIG["pipeline"]["raw_folder"],
+        CONFIG["pipeline"]["google_folder"],
+        CONFIG["pipeline"]["google_restaurants_file"]
+    )
+    os.makedirs(os.path.dirname(filepath), exist_ok=True)
+    
     with open(filepath, "w") as f:
         json.dump(all_results, f, indent=4)
 
     print("\n====================================================")
-    print("Extraction Complete.")
+    print("Extraction Complete")
     print(f"Saved {len(all_results)} restaurants to {filepath}")
     print("====================================================")
 

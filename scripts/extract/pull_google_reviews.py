@@ -45,15 +45,25 @@ def fetch_reviews(restaurant_id):
 
 
 def main():
-    raw_folder = CONFIG["pipeline"]["raw_path"]
-    filepath = os.path.join(raw_folder, CONFIG["pipeline"]["google_restaurants_path"])
+    print("\n====================================================")
+    print("Extracting Review Data from Google Places API")
+    print("====================================================")
 
-    with open(filepath, "r") as f:
+    restaurant_filepath = os.path.join(
+        CONFIG["pipeline"]["base_path"],
+        CONFIG["pipeline"]["raw_folder"],
+        CONFIG["pipeline"]["google_folder"],
+        CONFIG["pipeline"]["google_restaurants_file"]
+    )
+
+    with open(restaurant_filepath, "r") as f:
         restaurants = json.load(f)
 
     all_reviews = []
 
     for i, r in enumerate(restaurants):
+        if (i + 1) % 50 == 0:
+            print(f"{i + 1} / {len(restaurants)} restaurants processed")
         r_id = r.get("place_id")
 
         if not r_id:
@@ -65,17 +75,24 @@ def main():
             review["restaurant_id"] = r_id
             all_reviews.append(review)
 
-        print(f"{i+1} / {len(restaurants)} restaurants processed")
-
         time.sleep(CONFIG["pipeline"]["sleep_seconds"])
 
-    filepath = os.path.join(raw_folder, CONFIG["pipeline"]["google_reviews_path"])
+    filepath = os.path.join(
+        CONFIG["pipeline"]["base_path"],
+        CONFIG["pipeline"]["raw_folder"],
+        CONFIG["pipeline"]["google_folder"],
+        CONFIG["pipeline"]["google_reviews_file"]
+    )
+    os.makedirs(os.path.dirname(filepath), exist_ok=True)
 
     with open(filepath, "w") as f:
         json.dump(all_reviews, f, indent=4)
 
-    print(f"\nSaved {len(all_reviews)} reviews → {filepath}")
-
+    print("\n====================================================")
+    print("Extraction Complete")
+    print(f"Processed {len(restaurants)} restaurants")
+    print(f"Saved {len(all_reviews)} reviews to {filepath}")
+    print("====================================================")
 
 if __name__ == "__main__":
     main()
