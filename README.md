@@ -37,6 +37,8 @@ The project follows the Medallion Architecture with Bronze, Silver, and Gold lay
 2. **Silver Layer**: Data cleansing, standardization, and entity resolution - matching Google and Yelp restaurants on name and coordinates to create a unified restaurant dataset.
 3. **Gold Layer**: Business-ready data modeled into a star schema for analytical queries and reporting.
 
+![High-Level Architecture](docs/data_architecture.png)
+
 ---
 
 ## Tools & Technologies
