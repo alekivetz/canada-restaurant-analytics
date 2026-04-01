@@ -28,12 +28,12 @@ from config.config import CONFIG
 
 
 def fetch_reviews(restaurant_id):
-    url = CONFIG["api"]["details_endpoint"]
+    url = CONFIG["google_api"]["details_endpoint"]
 
     params = {
         "place_id": restaurant_id,
         "fields": "name,reviews,rating",
-        "key": CONFIG["api"]["key"]
+        "key": CONFIG["google_api"]["key"]
     }
 
     response = requests.get(url, params=params)

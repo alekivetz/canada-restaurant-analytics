@@ -27,13 +27,13 @@ from datetime import datetime
 from config.config import CONFIG
 
 def fetch_restaurants(lat, lon):
-    url = CONFIG["api"]["nearby_endpoint"]
+    url = CONFIG["google_api"]["nearby_endpoint"]
 
     params = {
         "location": f"{lat},{lon}",
         "radius": 3000,
         "type": "restaurant",
-        "key": CONFIG["api"]["key"]
+        "key": CONFIG["google_api"]["key"]
     }
 
     all_results = []
