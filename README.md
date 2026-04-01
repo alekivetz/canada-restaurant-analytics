@@ -33,8 +33,8 @@ Skills demonstrated:
 
 The project follows the Medallion Architecture with Bronze, Silver, and Gold layers:
 
-1. **Bronze Layer**: Raw data ingested from the Google Places API (restaurants, reviews) and Yelp Fusion API (restaurants, categories), along with Statistics Canada census CSV files, loaded into SQL Server as-is.
-2. **Silver Layer**: Data cleaning, standardization, and enrichment. This includes FSA (Forward Sortation Area) lookup via the Google Geocoding API, and entity resolution matching Google and Yelp restaurants.
+1. **Bronze Layer**: Raw data ingested from the Google Places API (restaurants, reviews) and Yelp Fusion API (restaurants, categories), along with Statistics Canada census CSV files. Each restaurant record is enriched with its FSA (Forward Sortation Area) during extraction via the Google Geocoding API.
+2. **Silver Layer**: Data cleansing, standardization, and entity resolution - matching Google and Yelp restaurants on name and coordinates to create a unified restaurant dataset.
 3. **Gold Layer**: Business-ready data modeled into a star schema for analytical queries and reporting.
 
 ---
