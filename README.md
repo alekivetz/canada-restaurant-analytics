@@ -41,7 +41,7 @@ The project follows the Medallion Architecture with Bronze, Silver, and Gold lay
 - **Python** - ETL scripts, API calls, data loading
 - **SQL Server** - Data warehouse (running in Docker)
 - **Google Places API** - Restaurant and review data
-- **Google Geocoding API** — FSA enrichment
+- **Google Geocoding API** - FSA enrichment
 - **Yelp Fusion API** - Restaurant data and categories
 - **Statistics Canada** - 2021 census data
 - **Docker** - Local SQL Server instance
