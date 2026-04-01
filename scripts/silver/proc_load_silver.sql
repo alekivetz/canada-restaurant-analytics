@@ -32,23 +32,23 @@ BEGIN
         
         PRINT ''
 		PRINT '-------------------------------------------';
-		PRINT 'Loading Restaurant Table';
+		PRINT 'Loading Google Restaurant Table';
 		PRINT '-------------------------------------------';
 
 		SET @start_time = GETDATE();
-		PRINT '>> Truncating Table: silver.restaurants';
-		TRUNCATE TABLE silver.restaurants;
+		PRINT '>> Truncating Table: silver.google_restaurants';
+		TRUNCATE TABLE silver.google_restaurants;
 
-		PRINT '>> Inserting Data Into: restaurants';
-		INSERT INTO silver.restaurants (
+		PRINT '>> Inserting Data Into: google_restaurants';
+		INSERT INTO silver.google_restaurants (
             restaurant_id,
             name,
             rating,
             user_ratings_total,
             price_level,
+            city,
             lat,
             lon,
-            city,
             fsa
         )
 
@@ -58,35 +58,35 @@ BEGIN
             rating,
             user_ratings_total,
             price_level,
+            city,
             lat,
             lon,
-            city,
             fsa
         FROM (
             SELECT 
                 *,
                 ROW_NUMBER() OVER (
                     PARTITION BY restaurant_id
-                    ORDER BY user_ratings_total DESC
+                    ORDER BY price_level DESC
                 ) AS rn
-            FROM bronze.restaurants
+            FROM bronze.google_restaurants
             ) t
-            WHERE rn = 1; -- Select restaurant with most user ratings for duplicate ids
+            WHERE rn = 1; -- Select restaurant with most expensive price for duplicate ids
         
         SET @end_time = GETDATE();
 	    PRINT '>> Load Duration: ' + CAST (DATEDIFF(second, @start_time, @end_time) AS NVARCHAR) + ' seconds';
 
         PRINT ''
 		PRINT '-------------------------------------------';
-		PRINT 'Loading Reviews Table';
+		PRINT 'Loading Google Reviews Table';
 		PRINT '-------------------------------------------';
 
 		SET @start_time = GETDATE();
-		PRINT '>> Truncating Table: silver.reviews';
-		TRUNCATE TABLE silver.reviews;
+		PRINT '>> Truncating Table: silver.google_reviews';
+		TRUNCATE TABLE silver.google_reviews;
 
-		PRINT '>> Inserting Data Into: reviews';
-		INSERT INTO silver.reviews (
+		PRINT '>> Inserting Data Into: google_reviews';
+		INSERT INTO silver.google_reviews (
             restaurant_id,
             author_name,
             rating,
@@ -100,8 +100,63 @@ BEGIN
             rating,
             text,
             DATEADD(SECOND, review_time, '1970-01-01') AS review_time
-        FROM bronze.reviews;
+        FROM (
+            SELECT
+                *,
+                ROW_NUMBER() OVER (
+                    PARTITION BY restaurant_id, author_name
+                    ORDER BY review_time DESC
+                ) AS rn
+            FROM bronze.google_reviews
+            ) t
+            WHERE rn = 1; -- Select review with most recent time for duplicate restaurant/author
 
+        SET @end_time = GETDATE();
+	    PRINT '>> Load Duration: ' + CAST (DATEDIFF(second, @start_time, @end_time) AS NVARCHAR) + ' seconds';
+
+        PRINT ''
+		PRINT '-------------------------------------------';
+		PRINT 'Loading Yelp Restaurant Table';
+		PRINT '-------------------------------------------';
+
+		SET @start_time = GETDATE();
+		PRINT '>> Truncating Table: silver.yelp_restaurants';
+		TRUNCATE TABLE silver.yelp_restaurants;
+
+		PRINT '>> Inserting Data Into: yelp_restaurants';
+		INSERT INTO silver.yelp_restaurants (
+            restaurant_id,
+            name,
+            rating,
+            categories,
+            price_level,
+            city,
+            lat,
+            lon,
+            fsa
+        )
+
+        SELECT 
+            restaurant_id,
+            NULLIF(TRIM(name), '') AS name,
+            rating,
+            categories,
+            price_level,
+            city,
+            lat,
+            lon,
+            fsa
+        FROM (
+            SELECT 
+                *,
+                ROW_NUMBER() OVER (
+                    PARTITION BY restaurant_id
+                    ORDER BY price_level DESC
+                ) AS rn
+            FROM bronze.yelp_restaurants
+            ) t
+            WHERE rn = 1; -- Select restaurant with most expensive price for duplicate ids
+        
         SET @end_time = GETDATE();
 	    PRINT '>> Load Duration: ' + CAST (DATEDIFF(second, @start_time, @end_time) AS NVARCHAR) + ' seconds';
 

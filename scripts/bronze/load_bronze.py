@@ -113,7 +113,7 @@ def load_google_reviews(cursor, filepath):
             )
             VALUES (?, ?, ?, ?, ?)
         """,
-        row.get("place_id"),
+        row.get("restaurant_id"),
         row.get("author_name"),
         row.get("rating"),
         row.get("text"),
