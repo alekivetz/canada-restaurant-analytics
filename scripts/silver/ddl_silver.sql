@@ -22,11 +22,12 @@ CREATE TABLE silver.google_restaurants (
     name                  NVARCHAR(255),
     rating                DECIMAL(3,2),
     user_ratings_total    INT,
-    price_level           INT,
+    price_level           NVARCHAR(5),
     lat                   DECIMAL(9,6),
     lon                   DECIMAL(9,6),
     city                  NVARCHAR(50),
-    fsa                   NVARCHAR(3) 
+    fsa                   NVARCHAR(3),
+    phone_number          NVARCHAR(50)
 );
 GO
 
@@ -41,19 +42,60 @@ CREATE TABLE silver.google_reviews (
     author_name           NVARCHAR(255),
     rating                DECIMAL(3,2),
     text                  NVARCHAR(MAX),
-    review_time           BIGINT,
+    review_time           DATETIME,
 );
 GO
 
-IF OBJECT_ID('silver.google_categories', 'U') IS NOT NULL
-    DROP TABLE google_categories;
+
+IF OBJECT_ID('silver.yelp_restaurants', 'U') IS NOT NULL
+    DROP TABLE silver.yelp_restaurants;
 GO
 
--- Restaurant category tags
-CREATE TABLE silver.google_categories (
-    restaurant_id   NVARCHAR(255),
-    category        NVARCHAR(100)
+-- Restaurant locations and metadata from Yelp Fusion API
+CREATE TABLE silver.yelp_restaurants (
+    restaurant_id         NVARCHAR(50),
+    name                  NVARCHAR(255),
+    rating                DECIMAL(3,2),
+    price_level           NVARCHAR(5),
+    city                  NVARCHAR(50),
+    lat                   DECIMAL(9,6),
+    lon                   DECIMAL(9,6),
+    fsa                   NVARCHAR(3),
+    phone_number          NVARCHAR(50)
 );
+GO
+
+IF OBJECT_ID('silver.restaurants', 'U') IS NOT NULL
+    DROP TABLE silver.restaurants;
+GO
+
+-- Merged restaurant table with Google and Yelp data
+CREATE TABLE silver.restaurants (
+    restaurant_id         NVARCHAR(50),
+    yelp_id               NVARCHAR(50),
+    name                  NVARCHAR(255),
+    google_rating         DECIMAL(3,2),
+    yelp_rating           DECIMAL(3,2),
+    google_price_level    NVARCHAR(5),
+    yelp_price_level      NVARCHAR(5),
+    city                  NVARCHAR(50),
+    lat                   DECIMAL(9,6),
+    lon                   DECIMAL(9,6),
+    fsa                   NVARCHAR(3),
+    source                NVARCHAR(50)
+);
+GO
+
+IF OBJECT_ID('silver.categories', 'U') IS NOT NULL
+    DROP TABLE silver.categories;
+GO
+
+-- Categories table
+CREATE TABLE silver.categories (
+    restaurant_id         NVARCHAR(50),
+    category              NVARCHAR(100)
+);
+GO
 
 IF OBJECT_ID('silver.census_2021', 'U') IS NOT NULL
     DROP TABLE silver.census_2021;
