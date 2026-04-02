@@ -59,7 +59,7 @@ def load_google_restaurants(cursor, filepath):
         data = json.load(f)
  
     for i, row in enumerate(data):
-        if (i + 1) % 100 == 0:
+        if (i + 1) % 200 == 0:
             print(f"{i + 1} / {len(data)} restaurants processed")
 
         location = row.get("geometry", {}).get("location", {})
@@ -73,9 +73,10 @@ def load_google_restaurants(cursor, filepath):
                 city,
                 lat,
                 lon,
-                fsa
+                fsa,
+                phone_number
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         row.get("place_id"),
         row.get("name"),
@@ -85,7 +86,8 @@ def load_google_restaurants(cursor, filepath):
         row.get("city"),
         location.get("lat"),
         location.get("lng"),
-        row.get("fsa")
+        row.get("fsa"),
+        row.get("international_phone_number")
         )
     print(f">> Inserted {len(data)} restaurants into bronze.google_restaurants")
 
@@ -102,7 +104,9 @@ def load_google_reviews(cursor, filepath):
     with open(filepath, "r") as f:
         data = json.load(f)
 
-    for row in data:
+    for i, row in enumerate(data):
+        if (i + 1) % 1000 == 0:
+            print(f"{i + 1} / {len(data)} reviews processed")
         cursor.execute("""
             INSERT INTO bronze.google_reviews (
                 restaurant_id,
@@ -135,7 +139,7 @@ def load_yelp_restaurants(cursor, filepath):
         data = json.load(f)
 
     for i, row in enumerate(data):
-        if (i + 1) % 100 == 0:
+        if (i + 1) % 200 == 0:
             print(f"{i + 1} / {len(data)} restaurants processed")
 
         coordinates = row.get("coordinates", {})
@@ -149,9 +153,10 @@ def load_yelp_restaurants(cursor, filepath):
                 city,
                 lat,
                 lon,
-                fsa
+                fsa,
+                phone_number
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         row.get("id"),
         row.get("name"),
@@ -161,7 +166,8 @@ def load_yelp_restaurants(cursor, filepath):
         row.get("location", {}).get("city"),
         coordinates.get("latitude"),
         coordinates.get("longitude"),
-        row.get("fsa")
+        row.get("fsa"),
+        row.get("phone")
         )
     print(f">> Inserted {len(data)} restaurants into bronze.yelp_restaurants")
 
@@ -169,17 +175,18 @@ def load_yelp_restaurants(cursor, filepath):
 
 # Load census data
 def load_census(cursor, filepath):
+    if not os.path.exists(filepath):
+        print(">> No census file found, skipping")
+        return
     
     print("\n------------------------------------------")
     print(">> Loading census data")
 
-    if not os.path.exists(filepath):
-        print(">> No census file found, skipping")
-        return
-
     df = pd.read_csv(filepath)
 
-    for _, row in df.iterrows():
+    for i, row in df.iterrows():
+        if (i + 1) % 1000 == 0:
+            print(f"{i + 1} / {len(df)} rows processed")
         clean_value = None if pd.isna(row["value"]) else float(row["value"])
         cursor.execute("""
             INSERT INTO bronze.census_2021 (
@@ -245,7 +252,7 @@ def main():
 
         end_time = datetime.now()
 
-        print("==========================================")
+        print("\n==========================================")
         print("Bronze Load Completed")
         print(f"Duration: {(end_time - start_time).seconds} seconds")
         print("==========================================")

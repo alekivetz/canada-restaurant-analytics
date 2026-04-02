@@ -26,7 +26,8 @@ CREATE TABLE bronze.google_restaurants (
     city                  NVARCHAR(50),
     lat                   DECIMAL(9,6),
     lon                   DECIMAL(9,6),
-    fsa                   NVARCHAR(3)   
+    fsa                   NVARCHAR(3),
+    phone_number          NVARCHAR(50)
 );
 GO
 
@@ -58,7 +59,8 @@ CREATE TABLE bronze.yelp_restaurants (
     city                  NVARCHAR(50),
     lat                   DECIMAL(9,6),
     lon                   DECIMAL(9,6),
-    fsa                   NVARCHAR(3)   
+    fsa                   NVARCHAR(3),
+    phone_number          NVARCHAR(50)
 );
 GO
 
