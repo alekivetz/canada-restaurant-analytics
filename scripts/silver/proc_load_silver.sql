@@ -42,7 +42,7 @@ BEGIN
 
 		PRINT '>> Inserting Data Into: google_restaurants';
 		INSERT INTO silver.google_restaurants (
-            restaurant_id,
+            google_id,
             name,
             rating,
             user_ratings_total,
@@ -55,7 +55,7 @@ BEGIN
         )
 
         SELECT 
-            restaurant_id,
+            google_id,
             NULLIF(TRIM(name), '') AS name,
             rating,
             user_ratings_total,
@@ -75,7 +75,7 @@ BEGIN
             SELECT 
                 *,
                 ROW_NUMBER() OVER (
-                    PARTITION BY restaurant_id
+                    PARTITION BY google_id
                     ORDER BY price_level DESC 
                 ) AS rn
             FROM bronze.google_restaurants
@@ -97,7 +97,7 @@ BEGIN
 
 		PRINT '>> Inserting Data Into: yelp_restaurants';
 		INSERT INTO silver.yelp_restaurants (
-            restaurant_id,
+            yelp_id,
             name,
             rating,
             price_level,
@@ -109,7 +109,7 @@ BEGIN
         )
 
         SELECT 
-            restaurant_id,
+            yelp_id,
             NULLIF(TRIM(name), '') AS name,
             rating,
             NULLIF(price_level, 'N/A') AS price_level,
@@ -129,7 +129,7 @@ BEGIN
             SELECT 
                 *,
                 ROW_NUMBER() OVER (
-                    PARTITION BY restaurant_id
+                    PARTITION BY yelp_id
                     ORDER BY LEN(price_level) DESC
                 ) AS rn
             FROM bronze.yelp_restaurants
@@ -151,7 +151,7 @@ BEGIN
 
 		PRINT '>> Inserting Data Into: restaurants';
 		INSERT INTO silver.restaurants (
-            restaurant_id,
+            google_id,
             yelp_id,
             name,
             google_rating,
@@ -165,8 +165,9 @@ BEGIN
             source
         )
 
+        -- Restaurants that are both Google and Yelp
         SELECT
-            restaurant_id,
+            google_id,
             yelp_id,
             name,
             google_rating,
@@ -180,19 +181,19 @@ BEGIN
             'both' AS source
         FROM (
             SELECT
-                g.restaurant_id AS restaurant_id,
-                y.restaurant_id AS yelp_id,
-                g.name AS name,
-                g.rating AS google_rating,
-                y.rating AS yelp_rating,
-                g.price_level AS google_price_level,
-                y.price_level AS yelp_price_level,
-                g.city AS city,
-                g.lat AS lat,
-                g.lon AS lon,
-                g.fsa AS fsa,
+                g.google_id             AS google_id,
+                y.yelp_id               AS yelp_id,
+                g.name                  AS name,
+                g.rating                AS google_rating,
+                y.rating                AS yelp_rating,
+                g.price_level           AS google_price_level,
+                y.price_level           AS yelp_price_level,
+                g.city                  AS city,
+                g.lat                   AS lat,
+                g.lon                   AS lon,
+                g.fsa                   AS fsa,
                 ROW_NUMBER() OVER (
-                            PARTITION BY g.restaurant_id
+                            PARTITION BY g.google_id
                             ORDER BY 
                                 CASE WHEN g.phone_number = y.phone_number THEN 0 ELSE 1 END,
                                 ABS(g.lat - y.lat) + ABS(g.lon - y.lon)
@@ -217,19 +218,20 @@ BEGIN
 
         UNION ALL
 
+        -- Restaurants that are only Google
         SELECT
-            g.restaurant_id,
-            NULL AS yelp_id,
-            g.name,
-            g.rating AS google_rating,
-            NULL AS yelp_rating,
-            g.price_level AS google_price_level,
-            NULL AS yelp_price_level,
-            g.city AS city,
-            g.lat AS lat,
-            g.lon AS lon,
-            g.fsa AS fsa,
-            'google' AS source
+            g.google_id                 AS google_id,
+            NULL                        AS yelp_id,
+            g.name                      AS name,    
+            g.rating                    AS google_rating,
+            NULL                        AS yelp_rating,
+            g.price_level               AS google_price_level,
+            NULL                        AS yelp_price_level,    
+            g.city                      AS city,    
+            g.lat                       AS lat, 
+            g.lon                       AS lon, 
+            g.fsa                       AS fsa,
+            'google'                    AS source
         FROM silver.google_restaurants g
             LEFT JOIN silver.yelp_restaurants y
             ON g.city = y.city
@@ -245,23 +247,24 @@ BEGIN
                 AND ABS(g.lon - y.lon) < 0.0005
                 )
             )
-        WHERE y.restaurant_id IS NULL
+        WHERE y.yelp_id IS NULL
 
         UNION ALL
 
+        -- Restaurants that are only Yelp
         SELECT
-            NULL AS restaurant_id,
-            y.restaurant_id AS yelp_id,
-            y.name AS name,
-            NULL AS google_rating,
-            y.rating AS yelp_rating,
-            NULL AS google_price_level,
-            y.price_level AS yelp_price_level,
-            y.city AS city,
-            y.lat AS lat,
-            y.lon AS lon,
-            y.fsa AS fsa,
-            'yelp' AS source
+            NULL                    AS google_id,
+            y.yelp_id               AS yelp_id,
+            y.name                  AS name,
+            NULL                    AS google_rating,
+            y.rating                AS yelp_rating,
+            NULL                    AS google_price_level,
+            y.price_level           AS yelp_price_level,    
+            y.city                  AS city,    
+            y.lat                   AS lat, 
+            y.lon                   AS lon,
+            y.fsa                   AS fsa,
+            'yelp'                  AS source
         FROM silver.yelp_restaurants y
             LEFT JOIN silver.google_restaurants g
             ON y.city = g.city
@@ -277,7 +280,7 @@ BEGIN
                 AND ABS(g.lon - y.lon) < 0.0005
                 )
             )
-        WHERE g.restaurant_id IS NULL;
+        WHERE g.google_id IS NULL;
 
         SET @end_time = GETDATE();
 	    PRINT '>> Load Duration: ' + CAST (DATEDIFF(second, @start_time, @end_time) AS NVARCHAR) + ' seconds';
@@ -293,12 +296,12 @@ BEGIN
 
         PRINT '>> Inserting Data Into: categories';
         INSERT INTO silver.categories (
-            restaurant_id,
+            yelp_id,
             category
         )
 
         SELECT
-            restaurant_id,
+            yelp_id,
             TRIM(value) AS category
         FROM bronze.yelp_restaurants
         CROSS APPLY STRING_SPLIT(categories, ',')
@@ -319,7 +322,7 @@ BEGIN
 
 		PRINT '>> Inserting Data Into: google_reviews';
 		INSERT INTO silver.google_reviews (
-            restaurant_id,
+            google_id,
             author_name,
             rating,
             text,
@@ -327,7 +330,7 @@ BEGIN
         )
 
         SELECT
-            restaurant_id,
+            google_id,
             NULLIF(TRIM(author_name), '') AS author_name,
             rating,
             text,
@@ -336,7 +339,7 @@ BEGIN
             SELECT
                 *,
                 ROW_NUMBER() OVER (
-                    PARTITION BY restaurant_id, author_name
+                    PARTITION BY google_id, author_name
                     ORDER BY review_time DESC
                 ) AS rn
             FROM bronze.google_reviews

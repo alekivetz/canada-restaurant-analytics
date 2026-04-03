@@ -39,14 +39,14 @@ GO
 -- Price level variance is minor and will be resolved in silver by keeping
 -- the non-null value where available
 SELECT
-    restaurant_id,
+    google_id,
     COUNT(*) AS count
 FROM bronze.google_restaurants
-GROUP BY restaurant_id
-HAVING COUNT(*) > 1 OR restaurant_id IS NULL;
+GROUP BY google_id
+HAVING COUNT(*) > 1 OR google_id IS NULL;
 
 SELECT
-    restaurant_id,
+    google_id,
     COUNT(DISTINCT name) AS name_variants,
     COUNT(DISTINCT rating) AS rating_variants,
     COUNT(DISTINCT user_ratings_total) AS user_ratings_total_variants,
@@ -55,7 +55,7 @@ SELECT
     COUNT(DISTINCT lon) AS lon_variants,
     COUNT(DISTINCT city) AS city_variants
 FROM bronze.google_restaurants
-GROUP BY restaurant_id
+GROUP BY google_id
 HAVING COUNT(*) > 1;
 
 -- Checking name column for null values or whitespaces
@@ -135,7 +135,7 @@ FROM bronze.google_restaurants
 WHERE phone_number IS NULL OR phone_number != TRIM(phone_number);
 
 SELECT
-    restaurant_id,
+    google_id,
     name,
     phone_number,
     dbo.strip_non_numeric(phone_number) AS phone_cleaned,
@@ -154,14 +154,14 @@ WHERE phone_number IS NOT NULL
 -- Two restaurants have null price_level, consistent with Google findings
 -- Duplicates will be deduplicated in silver using ROW_NUMBER()
 SELECT
-    restaurant_id,
+    yelp_id,
     COUNT(*) AS count
 FROM bronze.yelp_restaurants
-GROUP BY restaurant_id
-HAVING COUNT(*) > 1 OR restaurant_id IS NULL;
+GROUP BY yelp_id
+HAVING COUNT(*) > 1 OR yelp_id IS NULL;
 
 SELECT
-    restaurant_id,
+    yelp_id,
     COUNT(DISTINCT name) AS name_variants,
     COUNT(DISTINCT rating) AS rating_variants,
     COUNT(DISTINCT categories) AS categories_variants,
@@ -171,7 +171,7 @@ SELECT
     COUNT(DISTINCT lon) AS lon_variants,
     COUNT(DISTINCT fsa) AS fsa_variants
 FROM bronze.yelp_restaurants
-GROUP BY restaurant_id
+GROUP BY yelp_id
 HAVING COUNT(*) > 1;
 
 -- Checking name column for null values or whitespaces
@@ -245,7 +245,7 @@ FROM bronze.yelp_restaurants
 WHERE phone_number IS NULL OR phone_number != TRIM(phone_number);
 
 SELECT
-    restaurant_id,
+    yelp_id,
     name,
     phone_number,
     dbo.strip_non_numeric(phone_number) AS phone_cleaned,
@@ -263,36 +263,36 @@ WHERE phone_number IS NOT NULL
 -- Anything over 5 is a true duplicate as Google returns 5 reviews per restaurant
 -- Duplicates occur because the same restaurant can appear in multiple coordinate searches
 SELECT
-    restaurant_id,
+    google_id,
     COUNT(*) AS review_count
 FROM bronze.google_reviews
-GROUP BY restaurant_id
+GROUP BY google_id
 HAVING COUNT(*) > 5
 ORDER BY review_count DESC;
 
--- Checking for duplicate reviews by restaurant_id + author_name
+-- Checking for duplicate reviews by google_id + author_name
 -- Duplicates are expected due to overlapping coordinate searches during extraction
 -- Verifying duplicates have the same review_time (time_diff = 0) to confirm
 -- they are true duplicates and not separate reviews from the same author
 -- Result: All duplicates have time_diff = 0, safe to deduplicate in silver
 SELECT
-    restaurant_id,
+    google_id,
     author_name,
     COUNT(*) AS count,
     MIN(review_time) AS earliest,
     MAX(review_time) AS latest,
     MAX(review_time) - MIN(review_time) AS time_diff
 FROM bronze.google_reviews
-GROUP BY restaurant_id, author_name
+GROUP BY google_id, author_name
 HAVING COUNT(*) > 1
 ORDER BY time_diff DESC;
 
 -- Checking for null foreign keys
--- Result: Good, no null restaurant_ids
+-- Result: Good, no null google_ids
 SELECT
-    restaurant_id
+    google_id
 FROM bronze.google_reviews
-WHERE restaurant_id IS NULL;
+WHERE google_id IS NULL;
 
 -- Checking for nulls or whitespaces in author_name
 -- Result: Good, no null values or whitespaces
@@ -360,14 +360,14 @@ WHERE value IS NULL OR value < 0;
 -- Checking 'silver.google_restaurants'
 -- ====================================================================
 
--- Checking deduplication - no duplicate restaurant_ids should remain
+-- Checking deduplication - no duplicate google_ids should remain
 -- Result: Good, no duplicates
 SELECT
-    restaurant_id,
+    google_id,
     COUNT(*) AS count
 FROM silver.google_restaurants
-GROUP BY restaurant_id
-HAVING COUNT(*) > 1 OR restaurant_id IS NULL;
+GROUP BY google_id
+HAVING COUNT(*) > 1 OR google_id IS NULL;
 
 -- Checking price_level standardization
 -- Result: Should only contain $, $$, $$$, $$$$ or N/A
@@ -378,7 +378,7 @@ FROM silver.google_restaurants;
 -- Checking phone_number standardization
 -- Result: All phone numbers should be 11 digits or NULL
 SELECT
-    restaurant_id,
+    google_id,
     name,
     phone_number
 FROM silver.google_restaurants
@@ -396,14 +396,14 @@ FROM silver.google_restaurants;
 -- Checking 'silver.yelp_restaurants'
 -- ====================================================================
 
--- Checking deduplication - no duplicate restaurant_ids should remain
+-- Checking deduplication - no duplicate yelp_ids should remain
 -- Result: Good, no duplicates
 SELECT
-    restaurant_id,
+    yelp_id,
     COUNT(*) AS count
 FROM silver.yelp_restaurants
-GROUP BY restaurant_id
-HAVING COUNT(*) > 1 OR restaurant_id IS NULL;
+GROUP BY yelp_id
+HAVING COUNT(*) > 1 OR yelp_id IS NULL;
 
 -- Checking price_level standardization
 -- Result: Should only contain $, $$, $$$, $$$$ or NULL
@@ -420,7 +420,7 @@ FROM silver.yelp_restaurants;
 -- Checking phone_number standardization
 -- Result: All phone numbers should be 11 digits or NULL
 SELECT
-    restaurant_id,
+    yelp_id,
     name,
     phone_number
 FROM silver.yelp_restaurants
@@ -446,14 +446,14 @@ SELECT
 FROM silver.restaurants
 GROUP BY source;
 
--- Checking for null restaurant_id and yelp_id by source
+-- Checking for null google_id and yelp_id by source
 -- Result: Google-only records should have NULL yelp_id
---         Yelp-only records should have NULL restaurant_id
+--         Yelp-only records should have NULL google_id
 --         Both records should have neither NULL
 SELECT
     source,
     COUNT(*) AS total,
-    SUM(CASE WHEN restaurant_id IS NULL THEN 1 ELSE 0 END) AS null_google_id,
+    SUM(CASE WHEN google_id IS NULL THEN 1 ELSE 0 END) AS null_google_id,
     SUM(CASE WHEN yelp_id IS NULL THEN 1 ELSE 0 END) AS null_yelp_id
 FROM silver.restaurants
 GROUP BY source;
@@ -468,7 +468,7 @@ ORDER BY city;
 -- Checking for null lat/lon
 -- Result: Should be minimal
 SELECT
-    restaurant_id,
+    google_id,
     yelp_id,
     name,
     city,
@@ -485,11 +485,11 @@ WHERE lat IS NULL OR lon IS NULL;
 -- Checking deduplication - no restaurant/author duplicates should remain
 -- Result: Good, no duplicates
 SELECT
-    restaurant_id,
+    google_id,
     author_name,
     COUNT(*) AS count
 FROM silver.google_reviews
-GROUP BY restaurant_id, author_name
+GROUP BY google_id, author_name
 HAVING COUNT(*) > 1;
 
 -- Checking review_time conversion

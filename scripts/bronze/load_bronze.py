@@ -65,7 +65,7 @@ def load_google_restaurants(cursor, filepath):
         location = row.get("geometry", {}).get("location", {})
         cursor.execute("""
             INSERT INTO bronze.google_restaurants (
-                restaurant_id,
+                google_id,
                 name,
                 rating,
                 user_ratings_total,
@@ -109,7 +109,7 @@ def load_google_reviews(cursor, filepath):
             print(f"{i + 1} / {len(data)} reviews processed")
         cursor.execute("""
             INSERT INTO bronze.google_reviews (
-                restaurant_id,
+                google_id,
                 author_name,
                 rating,
                 text,
@@ -117,7 +117,7 @@ def load_google_reviews(cursor, filepath):
             )
             VALUES (?, ?, ?, ?, ?)
         """,
-        row.get("restaurant_id"),
+        row.get("restaurant_id"), # restaurant_id is a reserved word
         row.get("author_name"),
         row.get("rating"),
         row.get("text"),
@@ -145,7 +145,7 @@ def load_yelp_restaurants(cursor, filepath):
         coordinates = row.get("coordinates", {})
         cursor.execute("""
             INSERT INTO bronze.yelp_restaurants (
-                restaurant_id,
+                yelp_id,
                 name,
                 rating,
                 categories,

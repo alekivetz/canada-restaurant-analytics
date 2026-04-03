@@ -18,7 +18,7 @@ GO
 
 -- Restaurant locations and metadata from Google Places API
 CREATE TABLE bronze.google_restaurants (
-    restaurant_id         NVARCHAR(50),
+    google_id             NVARCHAR(50),
     name                  NVARCHAR(255),
     rating                DECIMAL(3,2),
     user_ratings_total    INT,
@@ -37,7 +37,7 @@ GO
 
 -- Customer reviews pulled from Google Places Details API
 CREATE TABLE bronze.google_reviews (
-    restaurant_id         NVARCHAR(255),
+    google_id             NVARCHAR(255),
     author_name           NVARCHAR(255),
     rating                DECIMAL(3,2),
     text                  NVARCHAR(MAX),
@@ -51,7 +51,7 @@ GO
 
 -- Restaurant locations and metadata from Yelp Fusion API
 CREATE TABLE bronze.yelp_restaurants (
-    restaurant_id         NVARCHAR(50),
+    yelp_id               NVARCHAR(50),
     name                  NVARCHAR(255),
     rating                DECIMAL(3,2),
     categories            NVARCHAR(MAX),

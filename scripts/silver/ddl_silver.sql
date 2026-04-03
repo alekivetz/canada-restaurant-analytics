@@ -18,7 +18,7 @@ GO
 
 -- Restaurant locations and metadata from Google Places API
 CREATE TABLE silver.google_restaurants (
-    restaurant_id         NVARCHAR(50) PRIMARY KEY,
+    google_id             NVARCHAR(50), 
     name                  NVARCHAR(255),
     rating                DECIMAL(3,2),
     user_ratings_total    INT,
@@ -37,8 +37,7 @@ GO
 
 -- Customer reviews pulled from Google Places Details API
 CREATE TABLE silver.google_reviews (
-    review_id             INT IDENTITY(1, 1) PRIMARY KEY,
-    restaurant_id         NVARCHAR(255),
+    google_id             NVARCHAR(255),
     author_name           NVARCHAR(255),
     rating                DECIMAL(3,2),
     text                  NVARCHAR(MAX),
@@ -53,7 +52,7 @@ GO
 
 -- Restaurant locations and metadata from Yelp Fusion API
 CREATE TABLE silver.yelp_restaurants (
-    restaurant_id         NVARCHAR(50),
+    yelp_id               NVARCHAR(50),
     name                  NVARCHAR(255),
     rating                DECIMAL(3,2),
     price_level           NVARCHAR(5),
@@ -71,7 +70,7 @@ GO
 
 -- Merged restaurant table with Google and Yelp data
 CREATE TABLE silver.restaurants (
-    restaurant_id         NVARCHAR(50),
+    google_id             NVARCHAR(50),
     yelp_id               NVARCHAR(50),
     name                  NVARCHAR(255),
     google_rating         DECIMAL(3,2),
@@ -82,7 +81,7 @@ CREATE TABLE silver.restaurants (
     lat                   DECIMAL(9,6),
     lon                   DECIMAL(9,6),
     fsa                   NVARCHAR(3),
-    source                NVARCHAR(50)
+    source                NVARCHAR(10)
 );
 GO
 
@@ -92,7 +91,7 @@ GO
 
 -- Categories table
 CREATE TABLE silver.categories (
-    restaurant_id         NVARCHAR(50),
+    yelp_id               NVARCHAR(50),
     category              NVARCHAR(100)
 );
 GO
