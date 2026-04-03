@@ -64,7 +64,7 @@ BEGIN
                 WHEN 2 THEN '$$'
                 WHEN 3 THEN '$$$'
                 WHEN 4 THEN '$$$$'
-                ELSE 'N/A'
+                ELSE NULL
             END AS price_level, -- Standardize price level to match yelp
             city,
             lat,
@@ -112,7 +112,7 @@ BEGIN
             yelp_id,
             NULLIF(TRIM(name), '') AS name,
             rating,
-            NULLIF(price_level, 'N/A') AS price_level,
+            price_level,
             CASE 
                 WHEN city IN ('Etobicoke', 'Scarborough', 'North York', 'East York', 'Markham', 'Vaughan', 'Mississauga', 'Thornhill', 'Concord', 'York') THEN 'Toronto'
                 WHEN city IN ('Burnaby', 'Richmond') THEN 'Vancouver'
@@ -123,7 +123,7 @@ BEGIN
             END AS city,
             lat,
             lon,
-            NULLIF(TRIM(fsa), 'n/a') AS fsa,
+            fsa,
             dbo.strip_non_numeric(phone_number) AS phone_number
         FROM (
             SELECT 
@@ -180,41 +180,50 @@ BEGIN
             fsa,
             'both' AS source
         FROM (
-            SELECT
-                g.google_id             AS google_id,
-                y.yelp_id               AS yelp_id,
-                g.name                  AS name,
-                g.rating                AS google_rating,
-                y.rating                AS yelp_rating,
-                g.price_level           AS google_price_level,
-                y.price_level           AS yelp_price_level,
-                g.city                  AS city,
-                g.lat                   AS lat,
-                g.lon                   AS lon,
-                g.fsa                   AS fsa,
-                ROW_NUMBER() OVER (
-                            PARTITION BY g.google_id
-                            ORDER BY 
-                                CASE WHEN g.phone_number = y.phone_number THEN 0 ELSE 1 END,
-                                ABS(g.lat - y.lat) + ABS(g.lon - y.lon)
-                        ) AS rn
-            FROM silver.google_restaurants g
+            SELECT *, ROW_NUMBER() OVER (
+                    PARTITION BY yelp_id 
+                    ORDER BY ABS(lat - y_lat) + ABS(lon - y_lon)
+                ) AS rn2
+            FROM(
+                SELECT
+                    g.google_id             AS google_id,
+                    y.yelp_id               AS yelp_id,
+                    g.name                  AS name,
+                    g.rating                AS google_rating,
+                    y.rating                AS yelp_rating,
+                    g.price_level           AS google_price_level,
+                    y.price_level           AS yelp_price_level,
+                    g.city                  AS city,
+                    g.lat                   AS lat,
+                    g.lon                   AS lon,
+                    g.fsa                   AS fsa,
+                    y.lat                   AS y_lat,
+                    y.lon                   AS y_lon,
+                    ROW_NUMBER() OVER (
+                        PARTITION BY g.google_id
+                        ORDER BY 
+                            CASE WHEN g.phone_number = y.phone_number THEN 0 ELSE 1 END,
+                            ABS(g.lat - y.lat) + ABS(g.lon - y.lon)
+                    ) AS rn
+                FROM silver.google_restaurants g
                 JOIN silver.yelp_restaurants y
-                ON g.city = y.city
+                    ON g.city = y.city
                     AND (
-                            (g.phone_number IS NOT NULL
-                    AND y.phone_number IS NOT NULL
-                    AND g.phone_number = y.phone_number)
-                    OR
-                    (
-                    (g.phone_number IS NULL OR y.phone_number IS NULL)
-                    AND DIFFERENCE(g.name, y.name) = 4
-                    AND ABS(g.lat - y.lat) < 0.0005
-                    AND ABS(g.lon - y.lon) < 0.0005
+                        (g.phone_number IS NOT NULL
+                        AND y.phone_number IS NOT NULL
+                        AND g.phone_number = y.phone_number)
+                        OR
+                        (
+                        (g.phone_number IS NULL OR y.phone_number IS NULL)
+                        AND DIFFERENCE(g.name, y.name) = 4
+                        AND ABS(g.lat - y.lat) < 0.0005
+                        AND ABS(g.lon - y.lon) < 0.0005
+                        )
                     )
-                )
-            ) t
-        WHERE rn = 1
+                ) t
+                WHERE rn = 1
+            ) t2
+        WHERE rn2  = 1
 
         UNION ALL
 

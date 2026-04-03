@@ -29,127 +29,93 @@ GO
 
 -- =============================================================================
 -- Create Dimension Table: gold.dim_restaurant
+-- Central dimension table linking all fact tables and category data
 -- =============================================================================
 
-If OBJECT_ID('gold.dim_restaurant', 'U') IS NOT NULL
+IF OBJECT_ID('gold.dim_restaurant', 'U') IS NOT NULL
     DROP TABLE gold.dim_restaurant;
 GO
 
-SELECT
-    ROW_NUMBER() OVER (ORDER BY name) AS restaurant_key, -- Surrogate key
-    google_id,
-    yelp_id,
-    name,
-    lat,
-    lon,
-    source
-INTO gold.dim_restaurant
-FROM silver.restaurants;
+CREATE TABLE gold.dim_restaurant (
+    restaurant_key     INT IDENTITY(1,1) PRIMARY KEY,
+    google_id          NVARCHAR(50),
+    yelp_id            NVARCHAR(50),
+    name               NVARCHAR(255),
+    lat                DECIMAL(9,6),
+    lon                DECIMAL(9,6),
+    source             NVARCHAR(10)
+);
 GO
 
 -- =============================================================================
 -- Create Dimension Table: gold.dim_location
+-- Location and demographic data at the FSA level, enriched with census data
 -- =============================================================================
 
 IF OBJECT_ID('gold.dim_location', 'U') IS NOT NULL
     DROP TABLE gold.dim_location;
 GO
 
-SELECT
-    ROW_NUMBER() OVER (ORDER BY fsa) AS location_key, -- Surrogate key
-    city,
-    fsa,
-    population,
-    average_age,
-    median_income
-INTO gold.dim_location
-FROM (
-    SELECT DISTINCT
-        r.city                          AS city,
-        r.fsa                           AS fsa,
-        c.population                    AS population,
-        c.average_age                   AS average_age,
-        c.median_income                 AS median_income
-    FROM silver.restaurants r
-    JOIN (
-        SELECT
-            fsa,
-            MAX(CASE WHEN variable = 'population' THEN value END) AS population,
-            MAX(CASE WHEN variable = 'average_age' THEN value END) AS average_age,
-            MAX(CASE WHEN variable = 'median_income' THEN value END) AS median_income
-        FROM silver.census_2021
-        GROUP BY fsa
-    ) c ON r.fsa = c.fsa
-) t;
+CREATE TABLE gold.dim_location (
+    location_key       INT IDENTITY(1,1) PRIMARY KEY,
+    city               NVARCHAR(50),
+    fsa                NVARCHAR(3),
+    population         DECIMAL(18,2),
+    average_age        DECIMAL(18,2),
+    median_income      DECIMAL(18,2)
+);
 GO
 
 -- =============================================================================
 -- Create Dimension Table: gold.dim_category
+-- Restaurant category tags sourced from Yelp Fusion API
 -- =============================================================================
 
 IF OBJECT_ID('gold.dim_category', 'U') IS NOT NULL
     DROP TABLE gold.dim_category;
 GO
 
-SELECT 
-    ROW_NUMBER() OVER (ORDER BY restaurant_key) AS category_key, -- Surrogate key
-    restaurant_key, -- Surrogate key linking the review to dim_restaurant
-    category
-INTO gold.dim_category
-FROM (
-    SELECT 
-        r.restaurant_key   AS restaurant_key,
-        c.category         AS category
-    FROM gold.dim_restaurant r
-    JOIN silver.categories c
-    ON r.yelp_id = c.yelp_id
-) t;
+CREATE TABLE gold.dim_category (
+    category_key       INT IDENTITY(1,1) PRIMARY KEY,
+    restaurant_key     INT,
+    category           NVARCHAR(100)
+);
 GO
 
 -- =============================================================================
 -- Create Fact Table: gold.fact_restaurants
+-- Analytical metrics for each restaurant including ratings and price levels
 -- =============================================================================
 
 IF OBJECT_ID('gold.fact_restaurants', 'U') IS NOT NULL
     DROP TABLE gold.fact_restaurants;
 GO
 
-SELECT
-    dr.restaurant_key      AS restaurant_key,
-    dl.location_key        AS location_key,
-    r.google_rating        AS google_rating,
-    r.yelp_rating          AS yelp_rating,
-    r.google_price_level   AS google_price_level,
-    r.yelp_price_level     AS yelp_price_level
-INTO gold.fact_restaurants
-FROM silver.restaurants r
-JOIN gold.dim_restaurant dr 
-    ON (
-        (r.google_id = dr.google_id AND r.source IN ('google', 'both'))
-        OR 
-        (r.yelp_id = dr.yelp_id AND r.source = 'yelp')
-    )
-LEFT JOIN gold.dim_location dl
-    ON r.fsa = dl.fsa;
+CREATE TABLE gold.fact_restaurants (
+    restaurant_key       INT,
+    location_key         INT,
+    google_rating        DECIMAL(3,2),
+    yelp_rating          DECIMAL(3,2),
+    google_price_level   NVARCHAR(5),
+    yelp_price_level     NVARCHAR(5)
+);
 GO
 
 -- =============================================================================
 -- Create Fact Table: gold.fact_reviews
+-- Individual customer reviews from Google Places API
 -- =============================================================================
 
 IF OBJECT_ID('gold.fact_reviews', 'U') IS NOT NULL
     DROP TABLE gold.fact_reviews;
 GO
 
-SELECT
-    ROW_NUMBER() OVER (ORDER BY restaurant_key) AS review_key, -- Surrogate key
-    dr.restaurant_key    AS restaurant_key, -- Surrogate key linking the review to dim_restaurant
-    r.author_name        AS author_name,
-    r.rating             AS rating,
-    r.text               AS text,
-    r.review_time        AS review_time
-INTO gold.fact_reviews
-FROM silver.google_reviews r
-JOIN gold.dim_restaurant dr
-    ON r.google_id = dr.google_id;
+CREATE TABLE gold.fact_reviews (
+    review_key          INT IDENTITY(1,1) PRIMARY KEY,
+    restaurant_key      INT,
+    author_name         NVARCHAR(255),
+    rating              DECIMAL(3,2),
+    text                NVARCHAR(MAX),
+    review_time         DATETIME
+);
 GO
