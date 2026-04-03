@@ -12,8 +12,8 @@ The Gold Layer is the business-level data representation, structured to support 
 | Column Name    | Data Type     | Description                                                                                   |
 |----------------|---------------|-----------------------------------------------------------------------------------------------|
 | restaurant_key | INT           | Surrogate key uniquely identifying each restaurant record in the dimension table.             |
-| restaurant_id  | NVARCHAR(255) | Google Places API identifier for the restaurant. NULL for Yelp-only records.                 |
-| yelp_id        | NVARCHAR(255) | Yelp Fusion API identifier for the restaurant. NULL for Google-only records.                 |
+| google_id      | NVARCHAR(50)  | Google Places API identifier for the restaurant. NULL for Yelp-only records.                 |
+| yelp_id        | NVARCHAR(50)  | Yelp Fusion API identifier for the restaurant. NULL for Google-only records.                 |
 | name           | NVARCHAR(255) | The name of the restaurant as returned by the source API.                                    |
 | lat            | DECIMAL(9,6)  | Latitude coordinate of the restaurant location.                                              |
 | lon            | DECIMAL(9,6)  | Longitude coordinate of the restaurant location.                                             |
@@ -58,8 +58,8 @@ The Gold Layer is the business-level data representation, structured to support 
 | location_key        | INT           | Surrogate key linking the record to the location dimension table. NULL if FSA is unavailable.|
 | google_rating       | DECIMAL(3,2)  | Average customer rating from Google Places API (1.0 - 5.0). NULL for Yelp-only records.     |
 | yelp_rating         | DECIMAL(3,2)  | Average customer rating from Yelp Fusion API (1.0 - 5.0). NULL for Google-only records.     |
-| google_price_level  | NVARCHAR(10)  | Price level from Google Places API ($, $$, $$$, $$$$, N/A). NULL for Yelp-only records.     |
-| yelp_price_level    | NVARCHAR(10)  | Price level from Yelp Fusion API ($, $$, $$$, $$$$). NULL for Google-only records.          |
+| google_price_level  | NVARCHAR(5)   | Price level from Google Places API ($, $$, $$$, $$$$, N/A). NULL for Yelp-only records.     |
+| yelp_price_level    | NVARCHAR(5)   | Price level from Yelp Fusion API ($, $$, $$$, $$$$). NULL for Google-only records.          |
 
 ---
 
