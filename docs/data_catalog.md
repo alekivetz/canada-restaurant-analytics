@@ -58,8 +58,8 @@ The Gold Layer is the business-level data representation, structured to support 
 | location_key        | INT           | Surrogate key linking the record to the location dimension table. NULL if FSA is unavailable.|
 | google_rating       | DECIMAL(3,2)  | Average customer rating from Google Places API (1.0 - 5.0). NULL for Yelp-only records.     |
 | yelp_rating         | DECIMAL(3,2)  | Average customer rating from Yelp Fusion API (1.0 - 5.0). NULL for Google-only records.     |
-| google_price_level  | NVARCHAR(5)   | Price level from Google Places API ($, $$, $$$, $$$$). NULL for Yelp-only records or restaurants with no price level set.     |
-| yelp_price_level    | NVARCHAR(5)   | Price level from Yelp Fusion API ($, $$, $$$, $$$$). NULL for Google-only records or restaurants with no price level set.          |
+| google_price_level  | NVARCHAR(5)   | Price level from Google Places API ('$', '$$', '$$$', '$$$$'). NULL for Yelp-only records or restaurants with no price level set.     |
+| yelp_price_level    | NVARCHAR(5)   | Price level from Yelp Fusion API ('$', '$$', '$$$', '$$$$'). NULL for Google-only records or restaurants with no price level set.          |
 
 ---
 
