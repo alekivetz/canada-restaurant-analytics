@@ -25,7 +25,7 @@ Skills demonstrated:
 - Census data integration
 - Docker-based SQL Server setup
 - Data visualization and dashboard development
-- Power BI integrationa and report design
+- Power BI integration and report design
 
 ---
 
@@ -83,7 +83,7 @@ The project follows the Medallion Architecture with Bronze, Silver, and Gold lay
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/canada-restaurant-analytics.git
+git clone https://github.com/alekivetz/canada-restaurant-analytics.git
 cd canada-restaurant-analytics
 ```
 
@@ -139,6 +139,7 @@ python -m scripts.bronze.load_bronze
  
 # 4. Gold layer — build analytical models and validate
 -- Run in SQL Server: scripts/gold/ddl_gold.sql
+-- Run in SQL Server: scripts/gold/proc_load_gold.sql
 -- Run in SQL Server: tests/quality_checks_gold.sql
 ```
 
@@ -165,6 +166,7 @@ canada-restaurant-analytics/
 │   └── init_warehouse.sql              # Warehouse initialization script
 │
 ├── tests/                              # Data quality checks
+├── utils/                              # Shared utility functions
 │
 ├── .env                                # Environment variables (not committed)
 ├── .gitignore
