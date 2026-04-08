@@ -18,6 +18,7 @@ The Gold Layer is the business-level data representation, structured to support 
 | lat            | DECIMAL(9,6)  | Latitude coordinate of the restaurant location.                                              |
 | lon            | DECIMAL(9,6)  | Longitude coordinate of the restaurant location.                                             |
 | source         | NVARCHAR(10)  | Indicates the data source for the restaurant ('google', 'yelp', or 'both').                  |
+| match_method   | NVARCHAR(20)  | Method used to match Google and Yelp records ('phone' or 'name_coordinates'). NULL for Google-only or Yelp-only records. |
 
 ---
 
@@ -56,8 +57,8 @@ The Gold Layer is the business-level data representation, structured to support 
 |---------------------|---------------|-----------------------------------------------------------------------------------------------|
 | restaurant_key      | INT           | Surrogate key linking the record to the restaurant dimension table.                          |
 | location_key        | INT           | Surrogate key linking the record to the location dimension table. NULL if FSA is unavailable.|
-| google_rating       | DECIMAL(3,2)  | Average customer rating from Google Places API (1.0 - 5.0). NULL for Yelp-only records.     |
-| yelp_rating         | DECIMAL(3,2)  | Average customer rating from Yelp Fusion API (1.0 - 5.0). NULL for Google-only records.     |
+| google_rating       | DECIMAL(3,2)  | Average customer rating from Google Places API (0.0 - 5.0). NULL for Yelp-only records.     |
+| yelp_rating         | DECIMAL(3,2)  | Average customer rating from Yelp Fusion API (0.0 - 5.0). NULL for Google-only records.     |
 | google_price_level  | NVARCHAR(5)   | Price level from Google Places API ('$', '$$', '$$$', '$$$$'). NULL for Yelp-only records or restaurants with no price level set.     |
 | yelp_price_level    | NVARCHAR(5)   | Price level from Yelp Fusion API ('$', '$$', '$$$', '$$$$'). NULL for Google-only records or restaurants with no price level set.          |
 
@@ -72,6 +73,6 @@ The Gold Layer is the business-level data representation, structured to support 
 | review_key     | INT           | Surrogate key uniquely identifying each review record in the fact table.                     |
 | restaurant_key | INT           | Surrogate key linking the review to the restaurant dimension table.                          |
 | author_name    | NVARCHAR(255) | The display name of the review author as returned by the Google Places API.                  |
-| rating         | DECIMAL(3,2)  | The rating given by the reviewer (1.0 - 5.0).                                               |
+| rating         | DECIMAL(3,2)  | The rating given by the reviewer (0.0 - 5.0).                                               |
 | text           | NVARCHAR(MAX) | The full text content of the review.                                                         |
 | review_time    | DATETIME      | The date and time the review was posted, converted from Unix timestamp.                      |
