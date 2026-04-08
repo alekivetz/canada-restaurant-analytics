@@ -55,7 +55,8 @@ BEGIN
             name,
             lat,
             lon,
-            source
+            source, 
+            match_method
         )
 
         SELECT
@@ -64,7 +65,8 @@ BEGIN
             name,
             lat,
             lon,
-            source
+            source,
+            match_method
         FROM silver.restaurants;
 
         SET @end_time = GETDATE();
@@ -225,3 +227,4 @@ BEGIN
 		PRINT '===========================================';
 	END CATCH
 END
+
