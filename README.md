@@ -1,6 +1,6 @@
 # Canada Restaurant Analytics
 
-A data warehouse and analytics project built around Canadian restaurant data from the Google Places API, Yelp Fusion API, and Statistics Canada census data. Designed as a portfolio project demonstrating end-to-end data engineering and analytics, from API extraction to a structured warehouse and interactive Power BI dashboard.
+A data warehouse and analytics project built around Canadian restaurant data from the Google Places API, Yelp Fusion API, and Statistics Canada census data. Designed as a portfolio project demonstrating end-to-end data engineering and analytics, from API extraction to a structured warehouse, exploratory data analysis, and interactive Power BI dashboard.
  
 ---
 
@@ -8,11 +8,11 @@ A data warehouse and analytics project built around Canadian restaurant data fro
 
 This project involves:
 
-1. **Data Extraction**: Pulling restaurant and review data from the Google Places API and restaurant data from the Yelp Fusion API across multiple Canadian cities, enriched with FSA data from the Google Geocoding API.
-2. **Census Integration**: Incorporating Statistics Canada 2021 census data (population, median age, median income) at the FSA level.
+1. **Data Extraction**: Pulling restaurant and review data from the Google Places API and restaurant data from the Yelp Fusion API across five Canadian cities (Vancouver, Calgary, Edmonton, Toronto, Montreal), enriched with FSA data from the Google Geocoding API.
+2. **Census Integration**: Incorporating Statistics Canada 2021 census data (population, median age, median income) at the FSA level across approximately 250 Forward Sortation Areas.
 3. **Data Warehousing**: Loading raw data into a SQL Server warehouse using a Python-based ETL pipeline.
 4. **Data Modeling**: Building fact and dimension tables in a star schema optimized for analytical queries.
-5. **Analytics & Reporting**: SQL-based analysis connecting restaurant performance to neighbourhood demographics.
+5. **Exploratory Data Analysis**: SQL and Python-based analysis exploring restaurant ratings, price tiers, category popularity, neighbourhood demographics, and platform differences between Google and Yelp.
 6. **Data Visualization**: Interactive Power BI dashboard connecting to the Gold layer, visualizing restaurant performance, category distribution, and demographic insights by city and FSA.
 
 Skills demonstrated:
@@ -24,6 +24,7 @@ Skills demonstrated:
 - Data modeling (star schema)
 - Census data integration
 - Docker-based SQL Server setup
+- Exploratory data analysis (Python, pandas, matplotlib, seaborn)
 - Data visualization and dashboard development
 - Power BI integration and report design
 
@@ -41,18 +42,39 @@ The project follows the Medallion Architecture with Bronze, Silver, and Gold lay
 
 ---
 
+## Exploratory Data Analysis
+
+The EDA notebook explores approximately 2,000 restaurants across five Canadian cities, connecting restaurant performance metrics to neighbourhood demographics and comparing data quality and coverage between platforms.
+
+Analytical questions explored:
+
+1. Do neighbourhood demographics influence restaurant ratings?
+2. Are expensive restaurants rated higher than budget ones?
+3. Which restaurant categories are most popular in each city?
+4. Which city has the biggest rating gap between Google and Yelp?
+5. Which cities have the most consistent restaurants, and which are the most polarizing?
+
+Key findings:
+- Neither median income nor average age showed a strong correlation with restaurant ratings on either platform.
+- Google ratings rise consistently with price tier, while Yelp shows the opposite pattern, pointing to fundamental differences in reviewer behaviour between platforms.
+- Japanese cuisine dominates Toronto and Vancouver while Canadian (New) leads in Calgary and Edmonton. Montreal stands out with Poutineries as a regionally distinct category.
+- Montreal is the most polarizing city on Google but the most consistent on Yelp, while Edmonton shows the reverse pattern.
+
+---
+
 ## Tools & Technologies
 
-- **Python** - ETL scripts, API calls, data loading
-- **SQL Server** - Data warehouse (running in Docker)
-- **Google Places API** - Restaurant and review data
-- **Google Geocoding API** - FSA enrichment
-- **Yelp Fusion API** - Restaurant data and categories
-- **Statistics Canada** - 2021 census data
-- **Docker** - Local SQL Server instance
-- **pyodbc** - Python to SQL Server connectivity
-- **pandas** - Census CSV processing
-- **Power BI** - Data visualization and dashboard development
+- **Python** — ETL scripts, API calls, data loading, exploratory data analysis
+- **SQL Server** — Data warehouse (running in Docker)
+- **Google Places API** — Restaurant and review data
+- **Google Geocoding API** — FSA enrichment
+- **Yelp Fusion API** — Restaurant data and categories
+- **Statistics Canada** — 2021 census data
+- **Docker** — Local SQL Server instance
+- **pyodbc** — Python to SQL Server connectivity
+- **pandas** — Data processing and analysis
+- **matplotlib / seaborn** — Data visualization
+- **Power BI** — Dashboard development
  
 ---
 
@@ -157,6 +179,8 @@ canada-restaurant-analytics/
 │   └── raw/                            # Raw API and census outputs
 │
 ├── docs/                               # Architecture diagrams and documentation
+│
+├── notebooks/                          # Exploratory data analysis
 │
 ├── scripts/
 │   ├── extract/                        # API extraction and data preparation
