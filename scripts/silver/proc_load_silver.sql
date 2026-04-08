@@ -175,7 +175,15 @@ BEGIN
                 ROW_NUMBER() OVER (
                     PARTITION BY yelp_id 
                     ORDER BY ABS(g.lat - y.lat) + ABS(g.lon - y.lon)
-                ) AS rn1
+                ) AS rn1,
+                ROW_NUMBER() OVER (
+            PARTITION BY g.google_id
+                ORDER BY 
+                    CASE WHEN g.phone_number IS NOT NULL 
+                        AND y.phone_number IS NOT NULL 
+                        AND g.phone_number = y.phone_number THEN 0 ELSE 1 END,
+                    ABS(g.lat - y.lat) + ABS(g.lon - y.lon)
+                ) AS rn2
             FROM silver.google_restaurants g
             JOIN silver.yelp_restaurants y
                 ON g.city = y.city
@@ -261,7 +269,7 @@ BEGIN
             'both' AS source,
             match_method
         FROM full_match
-        WHERE rn1 = 1
+        WHERE rn1 = 1 AND rn2 = 1
 
         UNION ALL
 
@@ -413,4 +421,3 @@ BEGIN
 		PRINT '===========================================';
 	END CATCH
 END
-
