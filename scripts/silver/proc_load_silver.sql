@@ -148,8 +148,87 @@ BEGIN
 		SET @start_time = GETDATE();
 		PRINT '>> Truncating Table: silver.restaurants';
 		TRUNCATE TABLE silver.restaurants;
+        PRINT '>> Inserting Data Into: restaurants';
 
-		PRINT '>> Inserting Data Into: restaurants';
+        -- CTE's for merging restaurant data
+        -- All potential matches with row numbers for dediuplication
+        WITH full_match AS (
+            SELECT
+                g.google_id             AS google_id,
+                y.yelp_id               AS yelp_id,
+                g.name                  AS name,
+                g.rating                AS google_rating,
+                y.rating                AS yelp_rating,
+                g.price_level           AS google_price_level,
+                y.price_level           AS yelp_price_level,
+                g.city                  AS city,
+                g.lat                   AS lat,
+                g.lon                   AS lon,
+                g.fsa                   AS fsa,
+                CASE
+                    WHEN g.phone_number IS NOT NULL 
+                        AND y.phone_number IS NOT NULL
+                        AND g.phone_number = y.phone_number
+                    THEN 'phone'
+                    ELSE 'name_coordinates'
+                END AS match_method,
+                ROW_NUMBER() OVER (
+                    PARTITION BY yelp_id 
+                    ORDER BY ABS(g.lat - y.lat) + ABS(g.lon - y.lon)
+                ) AS rn1
+            FROM silver.google_restaurants g
+            JOIN silver.yelp_restaurants y
+                ON g.city = y.city
+                AND (
+                    (g.phone_number IS NOT NULL
+                    AND y.phone_number IS NOT NULL
+                    AND g.phone_number = y.phone_number)
+                OR 
+                    ((g.phone_number IS NULL OR y.phone_number IS NULL)
+                    AND DIFFERENCE(g.name, y.name) = 4
+                    AND ABS(g.lat - y.lat) < 0.0005
+                    AND ABS(g.lon - y.lon) < 0.0005)
+                )
+        ),
+
+        -- Google restaurants with no Yelp match
+        google_unmatched AS (
+            SELECT g.*
+            FROM silver.google_restaurants g
+            LEFT JOIN silver.yelp_restaurants y
+                ON g.city = y.city
+                AND (
+                    (g.phone_number IS NOT NULL
+                    AND y.phone_number IS NOT NULL
+                    AND g.phone_number = y.phone_number)
+                OR 
+                    ((g.phone_number IS NULL OR y.phone_number IS NULL)
+                    AND DIFFERENCE(g.name, y.name) = 4
+                    AND ABS(g.lat - y.lat) < 0.0005
+                    AND ABS(g.lon - y.lon) < 0.0005)
+                )
+            WHERE y.yelp_id IS NULL
+        ),
+
+        -- Yelp restaurants with no Google match
+        yelp_unmatched AS (
+            SELECT y.*
+            FROM silver.yelp_restaurants y
+            LEFT JOIN silver.google_restaurants g
+                ON g.city = y.city
+                AND (
+                    (g.phone_number IS NOT NULL
+                    AND y.phone_number IS NOT NULL
+                    AND g.phone_number = y.phone_number)
+                OR 
+                    ((g.phone_number IS NULL OR y.phone_number IS NULL)
+                    AND DIFFERENCE(g.name, y.name) = 4
+                    AND ABS(g.lat - y.lat) < 0.0005
+                    AND ABS(g.lon - y.lon) < 0.0005)
+                )
+            WHERE g.google_id IS NULL
+        )
+
 		INSERT INTO silver.restaurants (
             google_id,
             yelp_id,
@@ -162,7 +241,8 @@ BEGIN
             lat,
             lon,
             fsa,
-            source
+            source,
+            match_method
         )
 
         -- Restaurants that are both Google and Yelp
@@ -178,52 +258,10 @@ BEGIN
             lat,
             lon,
             fsa,
-            'both' AS source
-        FROM (
-            SELECT *, ROW_NUMBER() OVER (
-                    PARTITION BY yelp_id 
-                    ORDER BY ABS(lat - y_lat) + ABS(lon - y_lon)
-                ) AS rn2
-            FROM(
-                SELECT
-                    g.google_id             AS google_id,
-                    y.yelp_id               AS yelp_id,
-                    g.name                  AS name,
-                    g.rating                AS google_rating,
-                    y.rating                AS yelp_rating,
-                    g.price_level           AS google_price_level,
-                    y.price_level           AS yelp_price_level,
-                    g.city                  AS city,
-                    g.lat                   AS lat,
-                    g.lon                   AS lon,
-                    g.fsa                   AS fsa,
-                    y.lat                   AS y_lat,
-                    y.lon                   AS y_lon,
-                    ROW_NUMBER() OVER (
-                        PARTITION BY g.google_id
-                        ORDER BY 
-                            CASE WHEN g.phone_number = y.phone_number THEN 0 ELSE 1 END,
-                            ABS(g.lat - y.lat) + ABS(g.lon - y.lon)
-                    ) AS rn
-                FROM silver.google_restaurants g
-                JOIN silver.yelp_restaurants y
-                    ON g.city = y.city
-                    AND (
-                        (g.phone_number IS NOT NULL
-                        AND y.phone_number IS NOT NULL
-                        AND g.phone_number = y.phone_number)
-                        OR
-                        (
-                        (g.phone_number IS NULL OR y.phone_number IS NULL)
-                        AND DIFFERENCE(g.name, y.name) = 4
-                        AND ABS(g.lat - y.lat) < 0.0005
-                        AND ABS(g.lon - y.lon) < 0.0005
-                        )
-                    )
-                ) t
-                WHERE rn = 1
-            ) t2
-        WHERE rn2  = 1
+            'both' AS source,
+            match_method
+        FROM full_match
+        WHERE rn1 = 1
 
         UNION ALL
 
@@ -240,23 +278,9 @@ BEGIN
             g.lat                       AS lat, 
             g.lon                       AS lon, 
             g.fsa                       AS fsa,
-            'google'                    AS source
-        FROM silver.google_restaurants g
-            LEFT JOIN silver.yelp_restaurants y
-            ON g.city = y.city
-            AND (
-                (g.phone_number IS NOT NULL
-                AND y.phone_number IS NOT NULL
-                AND g.phone_number = y.phone_number)
-                OR
-                (
-                (g.phone_number IS NULL OR y.phone_number IS NULL)
-                AND DIFFERENCE(g.name, y.name) = 4
-                AND ABS(g.lat - y.lat) < 0.0005
-                AND ABS(g.lon - y.lon) < 0.0005
-                )
-            )
-        WHERE y.yelp_id IS NULL
+            'google'                    AS source,
+            NULL                        AS match_method
+        FROM google_unmatched g
 
         UNION ALL
 
@@ -273,23 +297,9 @@ BEGIN
             y.lat                   AS lat, 
             y.lon                   AS lon,
             y.fsa                   AS fsa,
-            'yelp'                  AS source
-        FROM silver.yelp_restaurants y
-            LEFT JOIN silver.google_restaurants g
-            ON y.city = g.city
-            AND (
-                (g.phone_number IS NOT NULL
-                AND y.phone_number IS NOT NULL
-                AND g.phone_number = y.phone_number)
-                OR
-                (
-                (g.phone_number IS NULL OR y.phone_number IS NULL)
-                AND DIFFERENCE(g.name, y.name) = 4
-                AND ABS(g.lat - y.lat) < 0.0005
-                AND ABS(g.lon - y.lon) < 0.0005
-                )
-            )
-        WHERE g.google_id IS NULL;
+            'yelp'                  AS source,
+            NULL                    AS match_method
+        FROM yelp_unmatched y;
 
         SET @end_time = GETDATE();
 	    PRINT '>> Load Duration: ' + CAST (DATEDIFF(second, @start_time, @end_time) AS NVARCHAR) + ' seconds';
@@ -403,3 +413,4 @@ BEGIN
 		PRINT '===========================================';
 	END CATCH
 END
+

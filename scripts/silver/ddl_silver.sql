@@ -81,7 +81,8 @@ CREATE TABLE silver.restaurants (
     lat                   DECIMAL(9,6),
     lon                   DECIMAL(9,6),
     fsa                   NVARCHAR(3),
-    source                NVARCHAR(10)
+    source                NVARCHAR(10),
+    match_method          NVARCHAR(20)
 );
 GO
 
