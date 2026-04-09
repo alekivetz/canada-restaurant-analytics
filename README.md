@@ -62,6 +62,31 @@ Key findings:
 
 ---
 
+## Power BI Dashboard
+
+An interactive four-page dashboard connecting directly to the Gold layer, with city, platform, and price tier slicers and custom tooltips throughout.
+
+### Home
+![Dashboard Home](docs/dashboard_home.png)
+
+Project overview and four key insights summarizing the analysis findings.
+
+### Overview
+![Dashboard Overview](docs/dashboard_overview.png)
+
+High-level summary of restaurant coverage across cities, top cuisine categories, platform rating comparison, and top rated restaurants.
+
+### Rating & Price
+![Dashboard Rating & Price](docs/dashboard_ratings.png)
+
+Analysis of average ratings by price tier and city, restaurant count by price tier, and rating consistency across platforms and cities.
+
+### Demographics
+![Dashboard Demographics](docs/dashboard_demographics.png)
+
+Scatter plots exploring the relationship between median income, average age, population, and restaurant ratings across 178 FSAs, with a top rated FSAs summary table.
+
+
 ## Tools & Technologies
 
 - **Python** — ETL scripts, API calls, data loading, exploratory data analysis
