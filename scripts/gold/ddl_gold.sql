@@ -98,7 +98,8 @@ CREATE TABLE gold.fact_restaurants (
     google_rating        DECIMAL(3,2),
     yelp_rating          DECIMAL(3,2),
     google_price_level   NVARCHAR(5),
-    yelp_price_level     NVARCHAR(5)
+    yelp_price_level     NVARCHAR(5),
+    price_level          NVARCHAR(5)
 );
 GO
 

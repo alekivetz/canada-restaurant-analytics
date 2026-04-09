@@ -77,6 +77,7 @@ CREATE TABLE silver.restaurants (
     yelp_rating           DECIMAL(3,2),
     google_price_level    NVARCHAR(5),
     yelp_price_level      NVARCHAR(5),
+    price_level           NVARCHAR(5),
     city                  NVARCHAR(50),
     lat                   DECIMAL(9,6),
     lon                   DECIMAL(9,6),

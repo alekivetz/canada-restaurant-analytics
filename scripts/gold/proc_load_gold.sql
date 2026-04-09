@@ -154,7 +154,8 @@ BEGIN
             google_rating,
             yelp_rating,
             google_price_level,
-            yelp_price_level
+            yelp_price_level, 
+            price_level
         )
 
         SELECT
@@ -163,7 +164,8 @@ BEGIN
             r.google_rating         AS google_rating,
             r.yelp_rating           AS yelp_rating,
             r.google_price_level    AS google_price_level,
-            r.yelp_price_level      AS yelp_price_level
+            r.yelp_price_level      AS yelp_price_level,
+            r.price_level           AS price_level
         FROM silver.restaurants r
         JOIN gold.dim_restaurant dr
             ON (
@@ -176,7 +178,6 @@ BEGIN
 
         SET @end_time = GETDATE();
         PRINT '>> Load Duration: ' + CAST(DATEDIFF(second, @start_time, @end_time) AS NVARCHAR) + ' seconds';
-
 
         PRINT ''
 		PRINT '-------------------------------------------';

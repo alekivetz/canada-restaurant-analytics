@@ -161,6 +161,7 @@ BEGIN
                 y.rating                AS yelp_rating,
                 g.price_level           AS google_price_level,
                 y.price_level           AS yelp_price_level,
+                COALESCE(g.price_level, y.price_level) AS price_level,
                 g.city                  AS city,
                 g.lat                   AS lat,
                 g.lon                   AS lon,
@@ -245,6 +246,7 @@ BEGIN
             yelp_rating,
             google_price_level,
             yelp_price_level,
+            price_level,
             city,
             lat,
             lon,
@@ -262,11 +264,12 @@ BEGIN
             yelp_rating,
             google_price_level,
             yelp_price_level,
+            price_level,
             city,
             lat,
             lon,
             fsa,
-            'both' AS source,
+            'Both' AS source,
             match_method
         FROM full_match
         WHERE rn1 = 1 AND rn2 = 1
@@ -281,12 +284,13 @@ BEGIN
             g.rating                    AS google_rating,
             NULL                        AS yelp_rating,
             g.price_level               AS google_price_level,
-            NULL                        AS yelp_price_level,    
+            NULL                        AS yelp_price_level,
+            g.price_level               AS price_level,
             g.city                      AS city,    
             g.lat                       AS lat, 
             g.lon                       AS lon, 
             g.fsa                       AS fsa,
-            'google'                    AS source,
+            'Google'                    AS source,
             NULL                        AS match_method
         FROM google_unmatched g
 
@@ -300,12 +304,13 @@ BEGIN
             NULL                    AS google_rating,
             y.rating                AS yelp_rating,
             NULL                    AS google_price_level,
-            y.price_level           AS yelp_price_level,    
+            y.price_level           AS yelp_price_level,  
+            y.price_level           AS price_level,
             y.city                  AS city,    
             y.lat                   AS lat, 
             y.lon                   AS lon,
             y.fsa                   AS fsa,
-            'yelp'                  AS source,
+            'Yelp'                  AS source,
             NULL                    AS match_method
         FROM yelp_unmatched y;
 
