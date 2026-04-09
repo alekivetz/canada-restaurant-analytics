@@ -43,8 +43,7 @@ CREATE TABLE gold.dim_restaurant (
     name               NVARCHAR(255),
     lat                DECIMAL(9,6),
     lon                DECIMAL(9,6),
-    source             NVARCHAR(10),
-    match_method       NVARCHAR(20)
+    source             NVARCHAR(10)
 );
 GO
 

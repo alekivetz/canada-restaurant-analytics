@@ -18,7 +18,6 @@ The Gold Layer is the business-level data representation, structured to support 
 | lat            | DECIMAL(9,6)  | Latitude coordinate of the restaurant location.                                              |
 | lon            | DECIMAL(9,6)  | Longitude coordinate of the restaurant location.                                             |
 | source         | NVARCHAR(10)  | Indicates the data source for the restaurant ('google', 'yelp', or 'both').                  |
-| match_method   | NVARCHAR(20)  | Method used to match Google and Yelp records ('phone' or 'name_coordinates'). NULL for Google-only or Yelp-only records. |
 
 ---
 
